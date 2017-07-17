@@ -26,6 +26,22 @@ namespace StorjTests
         }
 
         [TestMethod]
+        public void MnemonicIsValid_128()
+        {
+            string mnemonic = "prevent stadium inmate diary south notice wreck shuffle chaos trend fish library";
+
+            Assert.IsTrue(Storj.CheckMnemonic(mnemonic));
+        }
+
+        [TestMethod]
+        public void MnemonicIsValid_256()
+        {
+            string mnemonic = "render exile spot lamp boat magic valley pact sea unfair fix glove hood tragic country husband climb frown narrow axis ability pencil space shiver";
+
+            Assert.IsTrue(Storj.CheckMnemonic(mnemonic));
+        }
+
+        [TestMethod]
         public void ShouldReturnTimestamp()
         {
             long timestamp = Storj.GetTimestamp();

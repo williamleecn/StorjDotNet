@@ -11,6 +11,8 @@ namespace StorjDotNet
     public class Storj
     {
         [DllImport("libstorj-0.dll")]
+        private static extern bool storj_mnemonic_check(string mnemonic);
+        [DllImport("libstorj-0.dll")]
         private static extern int storj_mnemonic_generate(int strength, ref IntPtr buffer);
         [DllImport("libstorj-0.dll")]
         private static extern long storj_util_timestamp();
@@ -34,6 +36,11 @@ namespace StorjDotNet
                 return Marshal.PtrToStringAnsi(ptr);
             }
             return string.Empty;            
+        }
+
+        public static bool CheckMnemonic(string mnemonic)
+        {
+            return storj_mnemonic_check(mnemonic);
         }
 
         /// <summary>

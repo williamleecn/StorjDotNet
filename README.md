@@ -30,7 +30,7 @@
 - [ ] Implement storj_free_get_buckets_request
 - [ ] Implement storj_free_list_files_request
 - [ ] Implement storj_init_env
-- [ ] Implement storj_mnemonic_check
+- [x] Implement storj_mnemonic_check
 - [x] Implement storj_mnemonic_generate
 - [ ] Implement storj_strerror
 - [x] Implement storj_util_timestamp
