@@ -1,5 +1,5 @@
 # StorjDotNet
-.NET Wrapper for Libstorj
+.NET Wrapper for https://github.com/Storj/libstorj
 
 ### Todo
 - [ ] Implement storj_bridge_create_bucket
