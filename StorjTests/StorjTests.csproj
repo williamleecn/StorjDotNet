@@ -51,6 +51,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="HelperTests.cs" />
     <Compile Include="StorjTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

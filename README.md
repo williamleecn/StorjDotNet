@@ -33,4 +33,4 @@
 - [ ] Implement storj_mnemonic_check
 - [x] Implement storj_mnemonic_generate
 - [ ] Implement storj_strerror
-- [ ] Implement storj_util_timestamp
+- [x] Implement storj_util_timestamp
