@@ -34,5 +34,10 @@ namespace StorjDotNet
                 return Convert.ToBase64String(combined.ToByteArray());
             }
         }
+
+        public void SetPasswordHash(string value)
+        {
+            m_Password = value;
+        }
     }
 }

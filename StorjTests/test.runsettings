@@ -2,10 +2,8 @@
 <RunSettings>
   <!-- Parameters used by tests at runtime -->
   <TestRunParameters>
-    <Parameter name="bridgeProto" value="https" />
-    <Parameter name="bridgePort" value="443" />
-    <Parameter name="bridgeHost" value="api.storj.io" />
-    <Parameter name="bridgeUser" value="ssa3512@gmail.com" />
-    <Parameter name="bridgePass" value="PT8ZgMTbzTedJiTW2IJN" />
+    <Parameter name="bridgeUrl" value="api.storj.io" />
+    <Parameter name="bridgeUser" value="ssa3512+StorjDotNetCI@gmail.com" />
+    <Parameter name="bridgePass" value="f7a7cf08e76001545c9767265503802dd972a7dd3bfb430b54b664dda5ba6529" />
   </TestRunParameters>
 </RunSettings>

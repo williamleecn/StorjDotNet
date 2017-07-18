@@ -14,22 +14,28 @@ namespace StorjTests
     public class StorjTests
     {
         private static IStorj m_libStorj;
+        private static string bridgeUser;
 
         [ClassInitialize]
         public static void TestClassinitialize(TestContext context)
         {
-            string bridgeUser = context.Properties.Contains("bridgeUser") ?
-                context.Properties["bridgeUser"].ToString() : null;
+            bridgeUser = context.Properties.Contains("bridgeUser") ?
+                context.Properties["bridgeUser"].ToString() : "ssa3512+StorjDotNetCI@gmail.com;
             string bridgePassword = context.Properties.Contains("bridgePass") ?
                 context.Properties["bridgePass"].ToString() : null;
+            string bridgeHost = context.Properties.Contains("bridgeUrl") ?
+                context.Properties["bridgeUrl"].ToString() : "api.storj.io";
 
-            m_libStorj = new Storj(new BridgeOptions()
+            var bridgeOptions = new BridgeOptions()
             {
-                BridgeUrl = "api.storj.io",
+                BridgeUrl = bridgeHost,
                 Protocol = BridgeProtocol.HTTPS,
-                Password = bridgePassword,
                 Username = bridgeUser
-            });
+            };
+
+            bridgeOptions.SetPasswordHash(bridgePassword);
+
+            m_libStorj = new Storj(bridgeOptions);
         }
 
         [TestMethod]
@@ -65,7 +71,7 @@ namespace StorjTests
         {
             try
             {
-                BridgeUser user = await m_libStorj.BridgeRegister("ssa3512@gmail.com", "password");
+                BridgeUser user = await m_libStorj.BridgeRegister(bridgeUser, "password");
                 Assert.Fail("Register should error");
             }
             catch(HttpRequestException ex)
