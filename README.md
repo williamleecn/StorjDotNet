@@ -2,3 +2,16 @@
 
 # StorjDotNet
 .NET Implementation of Storj
+
+
+### Todo
+- [x] Basic user registration
+- [ ] Additional user creation steps (activation/deactivation)
+- [x] Basic authentication against API
+- [ ] ECDSA authentication against API
+- [x] Bucket retrieval
+- [x] Bucket creation
+- [ ] Encryption stuff
+- [ ] File Upload
+- [ ] File retrieval
+- [ ] Contact lookup
