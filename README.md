@@ -1,5 +1,7 @@
+![Build Status](https://steveashman.visualstudio.com/_apis/public/build/definitions/c0516cca-9406-4297-865a-b9930d01fcf5/8/badge)
+
 # StorjDotNet
-.NET Wrapper for https://github.com/Storj/libstorj
+.NET Implementation of Storj
 
 ### Todo
 - [ ] Implement storj_bridge_create_bucket
