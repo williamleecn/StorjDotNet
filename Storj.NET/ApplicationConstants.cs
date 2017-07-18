@@ -15,7 +15,13 @@ namespace StorjDotNet
         ChineseTraditional,
         French,
         Unknown
-    };
+    }
+
+    public enum BridgeProtocol
+    {
+        HTTP,
+        HTTPS,
+    }
 
     public static class ApplicationConstants
     {

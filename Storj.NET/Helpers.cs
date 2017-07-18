@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Bitcoin.BIP39;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace StorjDotNet
 {
@@ -18,6 +20,12 @@ namespace StorjDotNet
         public static BIP39.Language StorjToBIP39Language(MnemonicLanguage storjLanguage)
         {
             return (BIP39.Language)Enum.Parse(typeof(BIP39.Language), Enum.GetName(typeof(MnemonicLanguage), storjLanguage));
+        }
+
+        public static HttpContent CreateHttpContentRequest(object requestObject)
+        {
+            string jsonObject = JsonConvert.SerializeObject(requestObject);
+            return new StringContent(jsonObject, Encoding.ASCII, "application/json");
         }
     }
 }
