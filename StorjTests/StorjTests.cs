@@ -20,7 +20,7 @@ namespace StorjTests
         public static void TestClassinitialize(TestContext context)
         {
             bridgeUser = context.Properties.Contains("bridgeUser") ?
-                context.Properties["bridgeUser"].ToString() : "ssa3512+StorjDotNetCI@gmail.com;
+                context.Properties["bridgeUser"].ToString() : "ssa3512+StorjDotNetCI@gmail.com";
             string bridgePassword = context.Properties.Contains("bridgePass") ?
                 context.Properties["bridgePass"].ToString() : null;
             string bridgeHost = context.Properties.Contains("bridgeUrl") ?
