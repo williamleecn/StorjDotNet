@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StorjDotNet", "StorjDotNet\StorjDotNet.csproj", "{2B277A96-2F9E-47FB-9882-B3DBA983E772}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StorjTests", "StorjTests\StorjTests.csproj", "{20DF29C0-E6B2-4C5C-BBCB-EFBA6C43DC37}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{905394D6-F281-46C8-A57A-CF5C2CE4B7AD}"
@@ -12,22 +10,49 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StorjDotNet", "Storj.NET\StorjDotNet.csproj", "{45B47886-0508-4B4E-9BE2-8E6DA8CD7098}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIP39.NET", "BIP39.NET\BIP39.NET\BIP39.NET\BIP39.NET.csproj", "{517A4285-49E4-4478-9388-DCF497EEA68A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "BIP39.NET\BIP39.NET\Tests\Tests.csproj", "{987A60B8-0C17-4DD2-973B-C76F799B0AC3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BIP39", "BIP39", "{3E67A6F3-1ABA-424C-8608-74845EDD8587}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BitcoinUtilities.NET", "BitcoinUtilities.NET\BitcoinUtilities.NET\BitcoinUtilities.NET\BitcoinUtilities.NET.csproj", "{E054C08C-8B6E-4767-999B-F7DE5F8A1E94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2B277A96-2F9E-47FB-9882-B3DBA983E772}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2B277A96-2F9E-47FB-9882-B3DBA983E772}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2B277A96-2F9E-47FB-9882-B3DBA983E772}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2B277A96-2F9E-47FB-9882-B3DBA983E772}.Release|Any CPU.Build.0 = Release|Any CPU
 		{20DF29C0-E6B2-4C5C-BBCB-EFBA6C43DC37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{20DF29C0-E6B2-4C5C-BBCB-EFBA6C43DC37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{20DF29C0-E6B2-4C5C-BBCB-EFBA6C43DC37}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{20DF29C0-E6B2-4C5C-BBCB-EFBA6C43DC37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45B47886-0508-4B4E-9BE2-8E6DA8CD7098}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45B47886-0508-4B4E-9BE2-8E6DA8CD7098}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45B47886-0508-4B4E-9BE2-8E6DA8CD7098}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45B47886-0508-4B4E-9BE2-8E6DA8CD7098}.Release|Any CPU.Build.0 = Release|Any CPU
+		{517A4285-49E4-4478-9388-DCF497EEA68A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{517A4285-49E4-4478-9388-DCF497EEA68A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{517A4285-49E4-4478-9388-DCF497EEA68A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{517A4285-49E4-4478-9388-DCF497EEA68A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{987A60B8-0C17-4DD2-973B-C76F799B0AC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{987A60B8-0C17-4DD2-973B-C76F799B0AC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{987A60B8-0C17-4DD2-973B-C76F799B0AC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{987A60B8-0C17-4DD2-973B-C76F799B0AC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E054C08C-8B6E-4767-999B-F7DE5F8A1E94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E054C08C-8B6E-4767-999B-F7DE5F8A1E94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E054C08C-8B6E-4767-999B-F7DE5F8A1E94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E054C08C-8B6E-4767-999B-F7DE5F8A1E94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{517A4285-49E4-4478-9388-DCF497EEA68A} = {3E67A6F3-1ABA-424C-8608-74845EDD8587}
+		{987A60B8-0C17-4DD2-973B-C76F799B0AC3} = {3E67A6F3-1ABA-424C-8608-74845EDD8587}
+		{E054C08C-8B6E-4767-999B-F7DE5F8A1E94} = {3E67A6F3-1ABA-424C-8608-74845EDD8587}
 	EndGlobalSection
 EndGlobal

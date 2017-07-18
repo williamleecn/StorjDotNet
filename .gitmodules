@@ -1,0 +1,6 @@
+[submodule "BIP39.NET"]
+	path = BIP39.NET
+	url = https://github.com/ssa3512/BIP39.NET
+[submodule "BitcoinUtilities.NET"]
+	path = BitcoinUtilities.NET
+	url = https://github.com/ssa3512/BitcoinUtilities.NET
