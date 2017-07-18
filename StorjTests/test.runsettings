@@ -5,7 +5,7 @@
     <Parameter name="bridgeProto" value="https" />
     <Parameter name="bridgePort" value="443" />
     <Parameter name="bridgeHost" value="api.storj.io" />
-    <Parameter name="bridgeUser" value="" />
-    <Parameter name="bridgePass" value="" />
+    <Parameter name="bridgeUser" value="ssa3512@gmail.com" />
+    <Parameter name="bridgePass" value="raslpKWQZk346Z84AvBe" />
   </TestRunParameters>
 </RunSettings>

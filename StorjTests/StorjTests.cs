@@ -1,31 +1,70 @@
 ﻿using System;
 using StorjDotNet;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Runtime.InteropServices;
 
 namespace StorjTests
 {
     [TestClass]
     public class StorjTests
     {
+        private static LibStorjFunctions libstorj;
         private static storj_bridge_options bridgeOptions;
+        private static storj_encrypt_options encryptOptions;
+        private static storj_http_options httpOptions;
+        private static storj_log_options logOptions;
 
         [ClassInitialize]
         public static void TestClassinitialize(TestContext context)
         {
+            libstorj = new LibStorjFunctions();
+
             bridgeOptions = new storj_bridge_options();
             bridgeOptions.proto = context.Properties["bridgeProto"].ToString();
             bridgeOptions.port = Convert.ToInt32(context.Properties["bridgePort"]);
             bridgeOptions.host = context.Properties["bridgeHost"].ToString();
             bridgeOptions.user = context.Properties["bridgeUser"].ToString();
             bridgeOptions.pass = context.Properties["bridgePass"].ToString();
+
+            encryptOptions = new storj_encrypt_options();
+            encryptOptions.mnemonic = "prevent stadium inmate diary south notice wreck shuffle chaos trend fish library";
+
+            httpOptions = new storj_http_options();
+            httpOptions.user_agent = "Storj.NET test runner".ToCharArray();
+            httpOptions.low_speed_limit = 30720L;
+            httpOptions.low_speed_time = 20L;
+            httpOptions.timeout = 60L;
+
+            logOptions = new storj_log_options();
+            logOptions.level = 4;
+            logOptions.logger = consoleLogger;
         }
+
+        public static readonly storj_logger_fn consoleLogger = logToConsole;
+        public static void logToConsole(IntPtr message, int level, IntPtr handle)
+        {
+            string log = Marshal.PtrToStringAnsi(message);
+            Console.WriteLine("\"message\": \"{0}\", \"level\": {1}, \"timestamp\": {2}\n",
+                message, level, DateTime.Now.ToString());
+        }
+
+        #region [ storj_init_env tests ]
+
+        [TestMethod]
+        public void ReturnsStorjEnv()
+        {
+            storj_env? env = null;
+            env = libstorj.storj_init_env(bridgeOptions, encryptOptions, httpOptions, logOptions);
+            Assert.IsNotNull(env);
+        }
+
+        #endregion
 
         #region [ storj_mnemonic_generate tests ]
 
         [TestMethod]
         public void ShouldReturnMnemonic_128()
         {
-            LibStorjFunctions libstorj = new LibStorjFunctions();
             string mnemonic = libstorj.storj_mnemonic_generate(128);
 
             Assert.IsFalse(string.IsNullOrEmpty(mnemonic), "Mnemonic should not be null or empty");
@@ -35,7 +74,6 @@ namespace StorjTests
         [TestMethod]
         public void ShouldReturnMnemonic_256()
         {
-            LibStorjFunctions libstorj = new LibStorjFunctions();
             string mnemonic = libstorj.storj_mnemonic_generate(256);
 
             Assert.IsFalse(string.IsNullOrEmpty(mnemonic), "Mnemonic should not be null or empty");
@@ -50,7 +88,6 @@ namespace StorjTests
         [ExpectedException(typeof(ArgumentException))]
         public void BadStrengthMnemonicShouldThrowException()
         {
-            LibStorjFunctions libstorj = new LibStorjFunctions();
             libstorj.storj_mnemonic_generate(152);
         }
 
@@ -58,7 +95,6 @@ namespace StorjTests
         public void MnemonicIsValid_128()
         {
             string mnemonic = "prevent stadium inmate diary south notice wreck shuffle chaos trend fish library";
-            LibStorjFunctions libstorj = new LibStorjFunctions();
             Assert.IsTrue(libstorj.storj_mnemonic_check(mnemonic));
         }
 
@@ -66,7 +102,6 @@ namespace StorjTests
         public void MnemonicIsValid_256()
         {
             string mnemonic = "render exile spot lamp boat magic valley pact sea unfair fix glove hood tragic country husband climb frown narrow axis ability pencil space shiver";
-            LibStorjFunctions libstorj = new LibStorjFunctions();
             Assert.IsTrue(libstorj.storj_mnemonic_check(mnemonic));
         }
 
@@ -77,7 +112,6 @@ namespace StorjTests
         [TestMethod]
         public void ShouldReturnCurrentTimestamp()
         {
-            LibStorjFunctions libstorj = new LibStorjFunctions();
             long timestamp = libstorj.storj_util_timestamp();
             DateTime currentTime = DateTime.UtcNow;
 
@@ -96,7 +130,6 @@ namespace StorjTests
         [TestMethod]
         public void ShouldReturnBridgeRequestErrorMessage()
         {
-            LibStorjFunctions libstorj = new LibStorjFunctions();
             string error = libstorj.storj_strerror(1000);
             Assert.AreEqual("Bridge request error", error);
         }

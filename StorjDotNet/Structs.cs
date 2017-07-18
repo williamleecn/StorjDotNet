@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 namespace StorjDotNet
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct StorjEnvironment
+    public struct storj_env
     {
-        public storj_bridge_options bridgeOptions;
-        EncryptionOptions encryptionOptions;
-        HttpOptions httpOptions;
-        LogOptions logOptions;
-        string tempPath;
-        IntPtr uvLoop;
-        storj_log_levels_t logLevels;
+        public storj_bridge_options bridge_options;
+        public storj_encrypt_options encrypt_options;
+        public storj_http_options http_options;
+        public storj_log_options log_options;
+        public IntPtr tmp_path;
+        public IntPtr loop;
+        public storj_log_levels log;
     }
 
     public enum ExchangeReportStatus
@@ -29,9 +29,9 @@ namespace StorjDotNet
 
     public struct EncryptionContext
     {
-        byte encryption_ctr;
-        byte encryption_key;
-        Aes256Context aes256Context;
+        public byte encryption_ctr;
+        public byte encryption_key;
+        public Aes256Context aes256Context;
     }
 
     public struct Aes256Context
@@ -44,36 +44,49 @@ namespace StorjDotNet
 
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct storj_bridge_options
     {
+        [MarshalAs(UnmanagedType.LPStr)]
         public string proto;
+        [MarshalAs(UnmanagedType.LPStr)]
         public string host;
         public int port;
+        [MarshalAs(UnmanagedType.LPStr)]
         public string user;
+        [MarshalAs(UnmanagedType.LPStr)]
         public string pass;
     }
 
-    public struct EncryptionOptions
+    public struct storj_encrypt_options
     {
+        [MarshalAs(UnmanagedType.LPStr)]
         public string mnemonic;
     }
 
-    public struct HttpOptions
+    public struct storj_http_options
     {
-        public string userAgent;
-        public string proxyUrl;
-        public ulong lowSpeedLimit;
-        public ulong lowSpeedTime;
+        public char[] user_agent;
+        public char[] proxy_url;
+        public ulong low_speed_limit;
+        public ulong low_speed_time;
         public ulong timeout;
     }
 
-    public struct LogOptions
-    {
+    public delegate void storj_logger_fn(IntPtr message, int level, IntPtr handle);
+    public delegate void storj_logger_format_fn(storj_log_options options, IntPtr handle, IntPtr format);
 
+    public struct storj_log_options
+    {
+        public storj_logger_fn logger;
+        public int level;
     }
 
-    public struct storj_log_levels_t
+    public struct storj_log_levels
     {
-
+        public storj_logger_format_fn debug;
+        public storj_logger_format_fn info;
+        public storj_logger_format_fn warn;
+        public storj_logger_format_fn error;
     }
 }

@@ -11,10 +11,21 @@ namespace StorjDotNet
     {
         public LibStorjFunctions()
         {
+            _storj_init_env = NativeMethods.storj_init_env;
             _storj_mnemonic_generate = NativeMethods.storj_mnemonic_generate;
             _storj_mnemonic_check = NativeMethods.storj_mnemonic_check;
             _storj_strerror = NativeMethods.storj_strerror;
             _storj_util_timestamp = NativeMethods.storj_util_timestamp;
+        }
+
+        protected Func<storj_bridge_options, storj_encrypt_options,
+            storj_http_options, storj_log_options, storj_env> _storj_init_env;
+        public storj_env storj_init_env(storj_bridge_options options,
+            storj_encrypt_options encrypt_options,
+            storj_http_options http_options,
+            storj_log_options log_options)
+        {
+            return _storj_init_env(options, encrypt_options, http_options, log_options);
         }
 
         protected Func<string, bool> _storj_mnemonic_check;
@@ -52,6 +63,8 @@ namespace StorjDotNet
         
         private static class NativeMethods
         {
+            [DllImport("libstorj-0")]
+            public static extern storj_env storj_init_env(storj_bridge_options options, storj_encrypt_options encrypt_options, storj_http_options http_options, storj_log_options log_options);
             [DllImport("libstorj-0")]
             public static extern bool storj_mnemonic_check(string mnemonic);
             [DllImport("libstorj-0")]
