@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- Parameters used by tests at runtime -->
+  <TestRunParameters>
+    <Parameter name="bridgeProto" value="https" />
+    <Parameter name="bridgePort" value="443" />
+    <Parameter name="bridgeHost" value="api.storj.io" />
+    <Parameter name="bridgeUser" value="" />
+    <Parameter name="bridgePass" value="" />
+  </TestRunParameters>
+</RunSettings>
