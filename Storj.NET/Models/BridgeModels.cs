@@ -74,18 +74,6 @@ namespace StorjDotNet.Models
         }
     }
 
-    public class BridgeRegisterModel
-    {
-        [JsonProperty("email")]
-        public string Email { get; set; }
-        [JsonProperty("password")]
-        public string Password { get; set; }
-        [JsonProperty("pubkey")]
-        public string Pubkey { get; set; }
-        [JsonProperty("referralPartner")]
-        public string ReferralPartner { get; set; }
-    }
-
     public class ResponseError
     {
         public string Error { get; set; }

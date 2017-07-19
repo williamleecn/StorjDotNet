@@ -14,6 +14,14 @@ namespace StorjDotNet
             return Encoding.ASCII.GetBytes(value);
         }
 
+        public static byte[] HexStringToBytes(this string value)
+        {
+            return Enumerable.Range(0, value.Length)
+                     .Where(x => x % 2 == 0)
+                     .Select(x => Convert.ToByte(value.Substring(x, 2), 16))
+                     .ToArray();
+        }
+
         public static string ToAsciiString(this byte[] value)
         {
             StringBuilder hex = new StringBuilder(value.Length * 2);

@@ -10,6 +10,7 @@ namespace StorjDotNet
     {
         public string BridgeUrl { get; set; }
         public BridgeProtocol Protocol { get; set; }
+        public AuthenticationMethod DefaultAuthenticationMethod { get; set; }
         public string Username { get; set; }
         private string m_Password;
         public string Password

@@ -23,6 +23,14 @@ namespace StorjDotNet
         HTTPS,
     }
 
+    public enum AuthenticationMethod
+    {
+        None = 0,
+        Basic,
+        ECDSA,
+        Token
+    }
+
     public static class ApplicationConstants
     {
         // File transfer success

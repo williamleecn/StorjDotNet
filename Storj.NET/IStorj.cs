@@ -16,6 +16,7 @@ namespace StorjDotNet
         Task<Bridge> GetBridge();
         Task<BridgeUser> BridgeRegister(string email, string password);
         Task<IEnumerable<Bucket>> GetBuckets();
-        Task<Bucket> CreateBucket(Bucket bucket);
+        Task<Bucket> CreateBucket(CreateBucketRequestModel model);
+        Task<AuthKeyModel> RegisterAuthKey(AuthKeyRequestModel model);
     }
 }

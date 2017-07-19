@@ -13,35 +13,74 @@ namespace StorjTests
     [TestClass]
     public class StorjTests
     {
-        private static IStorj m_libStorj;
-        private static string bridgeUser;
+        private const string defaultMnemonic = "amount culture oblige crystal elephant leisure run library host hurdle taxi cool odor sword parade picnic fence pass remove sudden cloud concert recipe weather";
+        private const string defaultUser = "ssa3512+StorjDotNetCI@gmail.com";
+        private const string defaultBridgeUrl = "api.storj.io";
+        private static string m_EcdsaKey;
+        private static IStorj m_LibStorjBasicAuth;
+        private static IStorj m_LibStorjEcdsaAuth;
+        private static string m_bridgeUser;
 
         [ClassInitialize]
         public static void TestClassinitialize(TestContext context)
         {
-            bridgeUser = context.Properties.Contains("bridgeUser") ?
-                context.Properties["bridgeUser"].ToString() : "ssa3512+StorjDotNetCI@gmail.com";
+            m_bridgeUser = context.Properties.Contains("bridgeUser") ?
+                context.Properties["bridgeUser"].ToString() : defaultUser;
             string bridgePassword = context.Properties.Contains("bridgePass") ?
                 context.Properties["bridgePass"].ToString() : null;
             string bridgeHost = context.Properties.Contains("bridgeUrl") ?
-                context.Properties["bridgeUrl"].ToString() : "api.storj.io";
+                context.Properties["bridgeUrl"].ToString() : defaultBridgeUrl;
+            string mnemonic = context.Properties.Contains("testMnemonic24") ?
+                context.Properties["testMnemonic24"].ToString() : defaultMnemonic;
 
-            var bridgeOptions = new BridgeOptions()
+            var basicAuthBridgeOptions = new BridgeOptions()
             {
                 BridgeUrl = bridgeHost,
                 Protocol = BridgeProtocol.HTTPS,
-                Username = bridgeUser
+                Username = m_bridgeUser,
+                DefaultAuthenticationMethod = AuthenticationMethod.Basic
+            };
+            basicAuthBridgeOptions.SetPasswordHash(bridgePassword);
+
+            var ecdsaAuthBridgeOptions = new BridgeOptions()
+            {
+                BridgeUrl = bridgeHost,
+                Protocol = BridgeProtocol.HTTPS,
+                Username = m_bridgeUser,
+                DefaultAuthenticationMethod = AuthenticationMethod.ECDSA
             };
 
-            bridgeOptions.SetPasswordHash(bridgePassword);
+            var keyPair = new Bitcoin.BitcoinUtilities.EcKeyPair(Bitcoin.BIP39.BIP39.GetSeedBytes(mnemonic));
+            m_EcdsaKey = keyPair.PublicKey.ToAsciiString();
 
-            m_libStorj = new Storj(bridgeOptions);
+            var encryptionOptions = new EncryptionOptions(mnemonic);
+            
+            m_LibStorjBasicAuth = new Storj(basicAuthBridgeOptions, null);
+            m_LibStorjEcdsaAuth = new Storj(ecdsaAuthBridgeOptions, encryptionOptions);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void ShouldRequireBridgeOptions()
+        {
+            new Storj(null, null);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void ShouldRequireEncryptionOptions()
+        {
+            BridgeOptions bridgeOptions = new BridgeOptions()
+            {
+                DefaultAuthenticationMethod = AuthenticationMethod.ECDSA
+            };
+            new Storj(bridgeOptions, null);
         }
 
         [TestMethod]
         public void ShouldGenerateMnemonic12Words()
         {
-            string mnemonic = m_libStorj.GenerateMnemonic(128).Result;
+            string mnemonic = m_LibStorjBasicAuth.GenerateMnemonic(128).Result;
             Assert.IsFalse(string.IsNullOrEmpty(mnemonic), "Mnemonic should not be null or empty");
             Assert.IsTrue(mnemonic.Split(' ').Length == 12, "Mnemonic should be 24 words");
             Console.WriteLine("Mnemonic is \"{0}\"", mnemonic);
@@ -50,7 +89,7 @@ namespace StorjTests
         [TestMethod]
         public void ShouldGenerateMnemonic24Words()
         {
-            string mnemonic = m_libStorj.GenerateMnemonic(256).Result;
+            string mnemonic = m_LibStorjBasicAuth.GenerateMnemonic(256).Result;
             Assert.IsFalse(string.IsNullOrEmpty(mnemonic), "Mnemonic should not be null or empty");
             Assert.IsTrue(mnemonic.Split(' ').Length == 24, "Mnemonic should be 24 words");
             Console.WriteLine("Mnemonic is \"{0}\"", mnemonic);
@@ -59,7 +98,7 @@ namespace StorjTests
         [TestMethod]
         public async Task ShouldGetBridge()
         {
-            Bridge bridge = await m_libStorj.GetBridge();
+            Bridge bridge = await m_LibStorjBasicAuth.GetBridge();
             Assert.IsNotNull(bridge);
             Assert.IsNotNull(bridge.Info);
             Assert.AreEqual(bridge.Info.Title, "Storj Bridge");
@@ -71,7 +110,7 @@ namespace StorjTests
         {
             try
             {
-                BridgeUser user = await m_libStorj.BridgeRegister(bridgeUser, "password");
+                BridgeUser user = await m_LibStorjBasicAuth.BridgeRegister(m_bridgeUser, "password");
                 Assert.Fail("Register should error");
             }
             catch(HttpRequestException ex)
@@ -83,30 +122,58 @@ namespace StorjTests
         }
 
         [TestMethod]
-        public async Task ShouldGetBuckets()
+        [ExpectedException(typeof(HttpRequestException), "Public key is already registered")]
+        public async Task ShouldGetKeyAlreadyRegisteredError()
         {
-            var buckets = await m_libStorj.GetBuckets();
+            AuthKeyRequestModel model = new AuthKeyRequestModel()
+            {
+                Key = m_EcdsaKey
+            };
+            try
+            {
+                AuthKeyModel authKeyResponse = await m_LibStorjBasicAuth.RegisterAuthKey(model);
+                Assert.Fail("Register should error");
+            }
+            catch(HttpRequestException ex)
+            {
+                Assert.AreEqual(ex.Message, "Public key is already registered");
+                throw;
+            }
+        }
+
+        [TestMethod]
+        public async Task ShouldGetBucketsBasicAuth()
+        {
+            var buckets = await m_LibStorjBasicAuth.GetBuckets();
+            Assert.IsNotNull(buckets);
+        }
+
+        [TestMethod]
+        public async Task ShouldGetBucketsEcdsaAuth()
+        {
+            var buckets = await m_LibStorjEcdsaAuth.GetBuckets();
             Assert.IsNotNull(buckets);
         }
 
         [TestMethod]
         public async Task ShouldCreateBucket()
         {
-            Bucket createdBucket = await m_libStorj.CreateBucket(null);
+            Bucket createdBucket = await m_LibStorjBasicAuth.CreateBucket(null);
             Assert.IsNotNull(createdBucket);
+            Console.WriteLine("Created bucket {0}", createdBucket.Name);
         }
 
         [TestMethod]
         [ExpectedException(typeof(HttpRequestException), "Name already used by another bucket")]
         public async Task ShouldFailBucketExists()
         {
-            Bucket newBucket = new Bucket()
+            CreateBucketRequestModel request = new CreateBucketRequestModel()
             {
                 Name = "BucketExists"
             };
             try
             {
-                Bucket createdBucket = await m_libStorj.CreateBucket(newBucket);
+                Bucket createdBucket = await m_LibStorjBasicAuth.CreateBucket(request);
                 Assert.Fail("CreateBucket should error");
             }
             catch(HttpRequestException ex)
