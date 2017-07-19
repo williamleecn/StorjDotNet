@@ -16,7 +16,7 @@ namespace StorjDotNet.Models
 
         public void SetNonce()
         {
-            m_Nonce = DateTime.Now.Ticks.ToString();
+            m_Nonce = Helpers.GetNonce();
         }
     }
 

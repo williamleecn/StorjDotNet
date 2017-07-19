@@ -19,6 +19,8 @@ namespace StorjDotNet
         private static readonly HttpClient client = new HttpClient();
         private readonly Crypto crypto;
 
+        private bool UseEncryption => crypto != null;
+
         public Storj(BridgeOptions bridgeOptions, EncryptionOptions encryptionOptions)
         {
             if (bridgeOptions == null)
@@ -59,20 +61,7 @@ namespace StorjDotNet
 
         public async Task<Bridge> GetBridge()
         {
-            Bridge bridge = null;
-            try
-            {
-                HttpResponseMessage response = await client.GetAsync(m_BridgeOptions.BridgeUri);
-                response.EnsureSuccessStatusCode();
-
-                string content = await response.Content.ReadAsStringAsync();
-                bridge = JsonConvert.DeserializeObject<Bridge>(content);
-                return bridge;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+            return await JsonRequest<Bridge>(string.Empty, HttpMethod.Get, null, AuthenticationMethod.None);
         }
 
         public async Task<BridgeUser> BridgeRegister(string email, string password)
@@ -84,13 +73,18 @@ namespace StorjDotNet
                 Password = hashedPassword
             };
 
-            return await JsonRequest<BridgeUser>("users", HttpMethod.Post, model, AuthenticationMethod.None);
-
+            return await JsonPost<BridgeUser>("users", model);
         }
 
         public async Task<IEnumerable<Bucket>> GetBuckets()
         {
-            return await JsonRequest<IEnumerable<Bucket>>("buckets", HttpMethod.Get, null, m_BridgeOptions.DefaultAuthenticationMethod);
+            IEnumerable<Bucket> buckets = await JsonGet<IEnumerable<Bucket>>("buckets");
+            if (UseEncryption)
+            {
+                crypto.TryDecryptBuckets(buckets);
+            }
+            return buckets;
+
         }
 
         public async Task<Bucket> CreateBucket(CreateBucketRequestModel model)
@@ -105,53 +99,59 @@ namespace StorjDotNet
 
         #region [ Private Helpers ]
 
+        private async Task<TResult> JsonGet<TResult>(string path)
+        {
+            return await JsonRequest<TResult>(path, HttpMethod.Get, null, m_BridgeOptions.DefaultAuthenticationMethod);
+        }
+
         private async Task<TResult> JsonPost<TResult>(string path, RequestModel model)
         {
             return await JsonRequest<TResult>(path, HttpMethod.Post, model, m_BridgeOptions.DefaultAuthenticationMethod);
         }
 
-        private async Task<T> JsonRequest<T>(string path, HttpMethod method, RequestModel data, AuthenticationMethod authenticationMethod)
+        private async Task<TResult> JsonRequest<TResult>(string path, HttpMethod method, RequestModel data, AuthenticationMethod authenticationMethod)
         {
+            string nonce;
             Uri requestUri = new Uri(m_BridgeOptions.BridgeUri, path);
-            HttpRequestMessage request = new HttpRequestMessage(method, requestUri);
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.Method = method;
+
+            string jsonObject = null;
+            if (method.IsDataRequest() && data != null)
+            {
+                if (authenticationMethod == AuthenticationMethod.ECDSA)
+                {
+                    data.SetNonce();
+                }
+                jsonObject = JsonConvert.SerializeObject(data);
+                request.Content = new StringContent(jsonObject, Encoding.ASCII, "application/json");
+            }
+            
+
             if (authenticationMethod == AuthenticationMethod.Basic)
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Basic", m_BridgeOptions.AuthorizationHeader);
             }
             else if (authenticationMethod == AuthenticationMethod.ECDSA)
             {
-                if (method == HttpMethod.Get)
-                {
-                    // Todo: Add nonce to query string
-                }
-                else
-                {
-                    if(data == null)
-                    {
-                        data = new RequestModel();
-                    }
-                    data.SetNonce();
-                }
+                // TODO: make this work
+                //string messageToSign;
+                //if (method.IsDataRequest())
+                //{
+                //    messageToSign = GetMessageToSign(path, method, jsonObject);
+                //}
+                //else
+                //{
+                //    nonce = Helpers.GetNonce();
+                //    string nonceQuery = string.Format("__nonce={0}", nonce);
+                //    requestUri = new Uri(requestUri, "?" + nonceQuery);
+                //    messageToSign = GetMessageToSign(path, method, nonceQuery);
+                //}
+                //request.Headers.Add("x-signature", crypto.SignMessage(messageToSign));
+                //request.Headers.Add("x-pubkey", crypto.Pubkey);
             }
 
-            if (method == HttpMethod.Post || method == HttpMethod.Put || method.Method == "PATCH")
-            {
-                string jsonObject = JsonConvert.SerializeObject(data);
-                request.Content = new StringContent(jsonObject, Encoding.ASCII, "application/json");
-                // sign content
-                if (authenticationMethod == AuthenticationMethod.ECDSA)
-                {
-                    request.Headers.Add("x-signature", crypto.SignMessage(jsonObject));
-                    request.Headers.Add("x-pubkey", crypto.Pubkey);
-                }
-            }
-            else if (method == HttpMethod.Get || method == HttpMethod.Delete || method == HttpMethod.Options)
-            {
-                //TODO - query strings from data?
-            }
-
-            
-
+            request.RequestUri = requestUri;
             string responseContent = null;
             try
             {
@@ -159,16 +159,20 @@ namespace StorjDotNet
                 responseContent = await response.Content.ReadAsStringAsync();
                 response.EnsureSuccessStatusCode();
 
-                T responseObject = JsonConvert.DeserializeObject<T>(responseContent);
+                TResult responseObject = JsonConvert.DeserializeObject<TResult>(responseContent);
                 return responseObject;
             }
             catch (HttpRequestException ex)
             {
                 ResponseError error = JsonConvert.DeserializeObject<ResponseError>(responseContent);
-                throw new HttpRequestException(error.Error, ex);
+                throw new HttpRequestException(error?.Error, ex);
             }
         }
 
+        private string GetMessageToSign(string path, HttpMethod method, string data)
+        {
+            return string.Concat(method.Method, "\n/", path, "\n", data);
+        }
         #endregion
     }
 }

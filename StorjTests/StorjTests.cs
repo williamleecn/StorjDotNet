@@ -51,7 +51,7 @@ namespace StorjTests
             };
 
             var keyPair = new Bitcoin.BitcoinUtilities.EcKeyPair(Bitcoin.BIP39.BIP39.GetSeedBytes(mnemonic));
-            m_EcdsaKey = keyPair.PublicKey.ToAsciiString();
+            m_EcdsaKey = keyPair.PublicKey.ToHexString();
 
             var encryptionOptions = new EncryptionOptions(mnemonic);
             
@@ -145,13 +145,6 @@ namespace StorjTests
         public async Task ShouldGetBucketsBasicAuth()
         {
             var buckets = await m_LibStorjBasicAuth.GetBuckets();
-            Assert.IsNotNull(buckets);
-        }
-
-        [TestMethod]
-        public async Task ShouldGetBucketsEcdsaAuth()
-        {
-            var buckets = await m_LibStorjEcdsaAuth.GetBuckets();
             Assert.IsNotNull(buckets);
         }
 

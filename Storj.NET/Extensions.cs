@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,9 +10,10 @@ namespace StorjDotNet
 {
     public static class Extensions
     {
-        public static byte[] ToByteArray(this string value)
+        public static byte[] ToByteArray(this string value, Encoding encoding = null)
         {
-            return Encoding.ASCII.GetBytes(value);
+            encoding = encoding ?? Encoding.UTF8;
+            return encoding.GetBytes(value) ;
         }
 
         public static byte[] HexStringToBytes(this string value)
@@ -22,7 +24,7 @@ namespace StorjDotNet
                      .ToArray();
         }
 
-        public static string ToAsciiString(this byte[] value)
+        public static string ToHexString(this byte[] value)
         {
             StringBuilder hex = new StringBuilder(value.Length * 2);
             foreach(byte b in value)
@@ -37,7 +39,12 @@ namespace StorjDotNet
             byte[] valueToHashBytes = valueToHash.ToByteArray();
             SHA256 sha = SHA256.Create();
             byte[] hashedValue = sha.ComputeHash(valueToHashBytes);
-            return hashedValue.ToAsciiString();
+            return hashedValue.ToHexString();
+        }
+
+        public static bool IsDataRequest(this HttpMethod method)
+        {
+            return method.Method == "POST" || method.Method == "PUT" || method.Method == "PATCH";
         }
     }
 }
