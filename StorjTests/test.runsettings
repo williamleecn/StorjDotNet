@@ -6,7 +6,7 @@
     <Parameter name="bridgeUser" value="ssa3512+StorjDotNetCI@gmail.com" />
     <Parameter name="bridgePass" value="f7a7cf08e76001545c9767265503802dd972a7dd3bfb430b54b664dda5ba6529" />
     <Parameter name="testMnemonic24" value="amount culture oblige crystal elephant leisure run library host hurdle taxi cool odor sword parade picnic fence pass remove sudden cloud concert recipe weather" />
-    <Parameter name="testMnemonic12" value="zoo cake isolate rapid stereo change finish length second camp spoil endless" />
+    <Parameter name="testMnemonic12" value="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about" />
     <Parameter name="testSeedFrom24" value="f8e2ca0ecb3c0f45feb0d819c5dd4f7b44ba4f42af15ad6d4acc98372309fc134f2e908e8b0812393576c829049d86f7266c1427faf568e89458046fdb7e3bcf" />
     <Parameter name="testSeedFrom12" value="47048f994c9c53833fb19b2a332070074601aab69b35b9d5ceb2a2fa4a13f4e200cae23bdff83b1e04216ebdf1f886aca62c5dcf94b1ad577b6c2199bc33f304" />
   </TestRunParameters>

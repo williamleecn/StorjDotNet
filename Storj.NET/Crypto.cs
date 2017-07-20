@@ -11,6 +11,7 @@ using Org.BouncyCastle.Crypto.Macs;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.IO;
+using Security.Cryptography;
 
 namespace StorjDotNet
 {
@@ -98,36 +99,37 @@ namespace StorjDotNet
             return digest;
         }
 
-        private string EncryptMeta(string meta, byte[] key, byte[] iv)
+        public string EncryptMeta(string meta, byte[] key, byte[] iv)
         {
-            
-            byte[] cipherText;
-            
-            using (var aesGcm = SymmetricAlgorithm.Create("Aes"))
+            using (var aes = new AuthenticatedAesCng())
             {
-                using (var encryptor = aesGcm.CreateEncryptor(key, iv))
+                aes.CngMode = CngChainingMode.Gcm;
+                aes.Key = key;
+                aes.IV = iv;
+                aes.Padding = PaddingMode.None;
+                
+                byte[] ciphertext;
+                byte[] digest;
+                using (MemoryStream ms = new MemoryStream())
+                using (IAuthenticatedCryptoTransform encryptor = aes.CreateAuthenticatedEncryptor())
+                using (CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
                 {
-                    using (var memStream = new MemoryStream())
-                    {
-                        using (var cryptoStream = new CryptoStream(memStream, encryptor, CryptoStreamMode.Write))
-                        {
-                            using (var streamWriter = new StreamWriter(cryptoStream))
-                            {
-                                streamWriter.Write(meta);
-                            }
+                    // Encrypt the secret message
+                    byte[] plaintext = meta.ToByteArray();
+                    cs.Write(plaintext, 0, plaintext.Length);
 
-                            cipherText = memStream.ToArray();
-                        }
-                    }
+                    // Finish the encryption and get the output authentication tag and ciphertext
+                    cs.FlushFinalBlock();
+                    digest = encryptor.GetTag();
+                    ciphertext = ms.ToArray();
                 }
+
+                // TODO: GCM digest + IV + encrypted name
+                return Convert.ToBase64String(ciphertext);
             }
-
-            // TODO: GCM digest + IV + encrypted name
-            return Convert.ToBase64String(cipherText);
-
         }
 
-        private string DecryptMeta(string encryptedMeta, byte[] key)
+        public string DecryptMeta(string encryptedMeta, byte[] key)
         {
             byte[] encryptedBucketName = Convert.FromBase64String(encryptedMeta);
             byte[] digest = encryptedBucketName.Take(GCM_DIGEST_SIZE).ToArray();

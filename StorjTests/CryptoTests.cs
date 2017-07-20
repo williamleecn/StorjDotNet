@@ -17,19 +17,14 @@ namespace StorjTests
     [TestClass]
     public class CryptoTests
     {
-        private const string defaultMnemonic24 = "amount culture oblige crystal elephant leisure run library host hurdle taxi cool odor sword parade picnic fence pass remove sudden cloud concert recipe weather";
-        private const string defaultMnemonic12 = "zoo cake isolate rapid stereo change finish length second camp spoil endless";
+        private const string mnemonic24 = "amount culture oblige crystal elephant leisure run library host hurdle taxi cool odor sword parade picnic fence pass remove sudden cloud concert recipe weather";
+        private const string mnemonic12 = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         private static BIP39 m_Bip39_24Words;
         private static BIP39 m_Bip39_12Words;
 
         [ClassInitialize]
         public static void TestClassinitialize(TestContext context)
         {
-            string mnemonic24 = context.Properties.Contains("testMnemonic24") ?
-                context.Properties["testMnemonic24"].ToString() : defaultMnemonic24;
-            string mnemonic12 = context.Properties.Contains("testMnemonic12") ?
-                context.Properties["testMnemonic12"].ToString() : defaultMnemonic12;
-
             m_Bip39_24Words = new BIP39(mnemonic24);
             m_Bip39_12Words = new BIP39(mnemonic12);
         }
@@ -37,9 +32,8 @@ namespace StorjTests
         [TestMethod]
         public void GeneratesSeed()
         {
-            string mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
             string expectedSeed = "5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4";
-            Assert.AreEqual(expectedSeed, BIP39.GetSeedBytesHexString(mnemonic));
+            Assert.AreEqual(expectedSeed, BIP39.GetSeedBytesHexString(mnemonic12));
         }
 
         [TestMethod]
@@ -54,8 +48,8 @@ namespace StorjTests
         public void GeneratesKeyPair12()
         {
             EcKeyPair keyPair = new EcKeyPair(m_Bip39_12Words.SeedBytes);
-            Assert.AreEqual("47048f994c9c53833fb19b2a332070074601aab69b35b9d5ceb2a2fa4a13f4e2", keyPair.PrivateKey.ToHexString());
-            Assert.AreEqual("03b3fe5883a563a6aa8fdd867608d14a27ad2ab197aa181c12c2b8e060cadb78fd", keyPair.PublicKey.ToHexString());
+            Assert.AreEqual("5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc1", keyPair.PrivateKey.ToHexString());
+            Assert.AreEqual("03889008040060652abb1e3a7900669ed8669f9b88d8110d8fa2935d19e55f541f", keyPair.PublicKey.ToHexString());
         }
 
         [TestMethod]
@@ -83,16 +77,22 @@ namespace StorjTests
             string bucket_id = "0123456789ab0123456789ab";
             string expected_bucket_key = "b2464469e364834ad21e24c64f637c39083af5067693605c84e259447644f6f6";
 
-            char[] expectedBucketKeyArray = expected_bucket_key.ToCharArray();
-
-            Console.WriteLine("Expected bucket key length is {0}", expected_bucket_key.Length);
             string bucket_key = new Crypto(mnemonic).GenerateBucketKey(bucket_id);
-            Console.WriteLine("Actual bucket key length is {0}", bucket_key.Length);
-            char[] bucketKeyChars = new char[bucket_key.Length];
-            //bucket_key.CopyTo(bucketKeyChars, 0);
-            //string chars = new string(Encoding.UTF8.GetChars(bucket_key));
-            Assert.AreEqual(expected_bucket_key, bucket_key);
-            
+
+            Assert.AreEqual(expected_bucket_key, bucket_key);     
+        }
+
+        [TestMethod]
+        public void EncryptsMeta()
+        {
+            byte[] key = new byte[32] {215,99,0,133,172,219,64,35,54,53,171,23,146,160,
+                81,126,137,21,253,171,48,217,184,188,8,137,3,4,83,50,30,251};
+            byte[] iv = new byte[32] {70,219,247,135,162,7,93,193,44,123,188,234,203,115,129,
+                      82,70,219,247,135,162,7,93,193,44,123,188,234,203,115,129,82};
+
+            string meta = "encrypt this text";
+            Crypto crypto = new Crypto(mnemonic12);
+            crypto.EncryptMeta(meta, key, iv);
         }
 
         [TestMethod]
