@@ -86,17 +86,17 @@ namespace StorjTests
             char[] expectedBucketKeyArray = expected_bucket_key.ToCharArray();
 
             Console.WriteLine("Expected bucket key length is {0}", expected_bucket_key.Length);
-            byte[] bucket_key = new Crypto(mnemonic).GenerateBucketKey(bucket_id);
-            Console.WriteLine("Actual bucket key length is {0}", bucket_key.ToHexString());
+            string bucket_key = new Crypto(mnemonic).GenerateBucketKey(bucket_id);
+            Console.WriteLine("Actual bucket key length is {0}", bucket_key.Length);
             char[] bucketKeyChars = new char[bucket_key.Length];
-            bucket_key.CopyTo(bucketKeyChars, 0);
-            string chars = new string(Encoding.UTF8.GetChars(bucket_key));
-            CollectionAssert.AreEqual(expected_bucket_key.ToByteArray(Encoding.ASCII), bucket_key);
+            //bucket_key.CopyTo(bucketKeyChars, 0);
+            //string chars = new string(Encoding.UTF8.GetChars(bucket_key));
+            Assert.AreEqual(expected_bucket_key, bucket_key);
             
         }
 
         [TestMethod]
-        public void DecryptsBucket()
+        public void DecryptsBucketName()
         {
             Bucket bucket = new Bucket()
             {
