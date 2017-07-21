@@ -23,9 +23,9 @@ namespace StorjDotNet
             return (BIP39.Language)Enum.Parse(typeof(BIP39.Language), Enum.GetName(typeof(MnemonicLanguage), storjLanguage));
         }
 
-        public static string GetNonce()
+        public static long GetNonce()
         {
-            return DateTime.Now.Ticks.ToString();
+            return DateTime.Now.Ticks;
         }
     }
 }

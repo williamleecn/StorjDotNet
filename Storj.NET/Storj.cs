@@ -35,14 +35,13 @@ namespace StorjDotNet
             crypto = encryptionOptions?.GetCrypto();
         }
 
-        public BridgeOptions BridgeOptions
+        public void SetBridgeOptions(BridgeOptions bridgeOptions)
         {
-            set
-            {
-                m_BridgeOptions = value;
-            }
+            m_BridgeOptions = bridgeOptions;
         }
-        
+
+        #region [ Mnemonic Functions ]
+
         public async Task<string> GenerateMnemonic(int strength)
         {
             return await GenerateMnemonic(strength, string.Empty, MnemonicLanguage.English);
@@ -59,10 +58,32 @@ namespace StorjDotNet
             return (await mnemonicGenerator).MnemonicSentence;
         }
 
+        #endregion
+
+        #region [ Bridge Calls ]
+
         public async Task<Bridge> GetBridge()
         {
             return await JsonRequest<Bridge>(string.Empty, HttpMethod.Get, null, AuthenticationMethod.None);
         }
+
+        public async Task<IEnumerable<Contact>> GetContacts()
+        {
+            return await GetContacts(null);
+        }
+
+        public async Task<IEnumerable<Contact>> GetContacts(ContactListRequestModel model)
+        {
+            return await JsonGet<IEnumerable<Contact>>("contacts", model);
+        }
+
+        public async Task<Contact> GetContact(ContactRequestModel model)
+        {
+            return await JsonGet<Contact>(string.Format("contacts/{0}", model.NodeId));
+        }
+        #endregion
+
+        #region [ User APIs ]
 
         public async Task<BridgeUser> BridgeRegister(string email, string password)
         {
@@ -75,6 +96,15 @@ namespace StorjDotNet
 
             return await JsonPost<BridgeUser>("users", model);
         }
+
+        public async Task<AuthKeyModel> RegisterAuthKey(AuthKeyRequestModel model)
+        {
+            return await JsonPost<AuthKeyModel>("keys", model);
+        }
+
+        #endregion
+
+        #region [ Bucket Management ] 
 
         public async Task<IEnumerable<Bucket>> GetBuckets()
         {
@@ -92,16 +122,13 @@ namespace StorjDotNet
             return await JsonPost<Bucket>("buckets", model);
         }
 
-        public async Task<AuthKeyModel> RegisterAuthKey(AuthKeyRequestModel model)
-        {
-            return await JsonPost<AuthKeyModel>("keys", model);
-        }
-
+        #endregion
+        
         #region [ Private Helpers ]
 
-        private async Task<TResult> JsonGet<TResult>(string path)
+        private async Task<TResult> JsonGet<TResult>(string path, RequestModel model = null)
         {
-            return await JsonRequest<TResult>(path, HttpMethod.Get, null, m_BridgeOptions.DefaultAuthenticationMethod);
+            return await JsonRequest<TResult>(path, HttpMethod.Get, model, m_BridgeOptions.DefaultAuthenticationMethod);
         }
 
         private async Task<TResult> JsonPost<TResult>(string path, RequestModel model)
@@ -109,46 +136,57 @@ namespace StorjDotNet
             return await JsonRequest<TResult>(path, HttpMethod.Post, model, m_BridgeOptions.DefaultAuthenticationMethod);
         }
 
-        private async Task<TResult> JsonRequest<TResult>(string path, HttpMethod method, RequestModel data, AuthenticationMethod authenticationMethod)
+        private async Task<TResult> JsonRequest<TResult>(string path, HttpMethod method, RequestModel model, AuthenticationMethod authenticationMethod)
         {
-            string nonce;
             Uri requestUri = new Uri(m_BridgeOptions.BridgeUri, path);
             HttpRequestMessage request = new HttpRequestMessage();
             request.Method = method;
 
             string jsonObject = null;
-            if (method.IsDataRequest() && data != null)
+            if (method.IsDataRequest() && model != null)
             {
                 if (authenticationMethod == AuthenticationMethod.ECDSA)
                 {
-                    data.SetNonce();
+                    model.SetNonce();
                 }
-                jsonObject = JsonConvert.SerializeObject(data);
+                jsonObject = JsonConvert.SerializeObject(model);
                 request.Content = new StringContent(jsonObject, Encoding.ASCII, "application/json");
             }
             
-
+            // Authentication
+            // Basic
             if (authenticationMethod == AuthenticationMethod.Basic)
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Basic", m_BridgeOptions.AuthorizationHeader);
             }
+            // ECSDA signature
             else if (authenticationMethod == AuthenticationMethod.ECDSA)
             {
+                if (model == null)
+                {
+                    model = new RequestModel();
+                }
+                model.SetNonce();
+
                 // TODO: make this work
-                //string messageToSign;
-                //if (method.IsDataRequest())
-                //{
-                //    messageToSign = GetMessageToSign(path, method, jsonObject);
-                //}
-                //else
-                //{
-                //    nonce = Helpers.GetNonce();
-                //    string nonceQuery = string.Format("__nonce={0}", nonce);
-                //    requestUri = new Uri(requestUri, "?" + nonceQuery);
-                //    messageToSign = GetMessageToSign(path, method, nonceQuery);
-                //}
-                //request.Headers.Add("x-signature", crypto.SignMessage(messageToSign));
-                //request.Headers.Add("x-pubkey", crypto.Pubkey);
+                string messageToSign;
+                if (method.IsDataRequest())
+                {
+                    messageToSign = GetMessageToSign(path, method, jsonObject);
+                }
+                else
+                {
+                    string query = ConstructQueryString(model.GetQueryParams());
+                    messageToSign = GetMessageToSign(path, method, query);
+                }
+                request.Headers.Add("x-signature", crypto.SignMessage(messageToSign));
+                request.Headers.Add("x-pubkey", crypto.Pubkey);
+            }
+
+            if (!method.IsDataRequest())
+            {
+                string query = ConstructQueryString(model?.GetQueryParams());
+                requestUri = new Uri(requestUri, query);
             }
 
             request.RequestUri = requestUri;
@@ -167,6 +205,31 @@ namespace StorjDotNet
                 ResponseError error = JsonConvert.DeserializeObject<ResponseError>(responseContent);
                 throw new HttpRequestException(error?.Error, ex);
             }
+        }
+
+        private static string ConstructQueryString(Dictionary<string, object> query)
+        {
+            if (query == null || !query.Any())
+            {
+                return string.Empty;
+            }
+            StringBuilder queryBuilder = new StringBuilder();
+            queryBuilder.Append("?");
+            bool first = true;
+            foreach (var keypair in query)
+            {
+                if (keypair.Value == null)
+                {
+                    continue;
+                }
+                if (!first)
+                {
+                    queryBuilder.Append("&");
+                }
+                queryBuilder.AppendFormat("{0}={1}", keypair.Key, keypair.Value);
+                first = false;
+            }
+            return queryBuilder.ToString();
         }
 
         private string GetMessageToSign(string path, HttpMethod method, string data)

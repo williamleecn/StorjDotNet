@@ -105,6 +105,35 @@ namespace StorjTests
         }
 
         [TestMethod]
+        public async Task ShouldGetContacts()
+        {
+            IEnumerable<Contact> contacts = await m_LibStorjBasicAuth.GetContacts();
+            Assert.IsNotNull(contacts);
+            Assert.IsTrue(contacts.Any(), "Contact count should be greater than zero.");
+            Assert.IsTrue(contacts.All(c => !string.IsNullOrEmpty(c.NodeId)), "All contacts should have a node ID");
+        }
+
+        [TestMethod]
+        public async Task ShouldGetContactsFiltered()
+        {
+            string expectedAddress = "storj3.ddns.net";
+            ContactListRequestModel model = new ContactListRequestModel()
+            {
+                Address = expectedAddress 
+            };
+            IEnumerable<Contact> contacts = await m_LibStorjBasicAuth.GetContacts(model);
+            Assert.IsNotNull(contacts);
+            Assert.IsTrue(contacts.Any());
+            Assert.IsTrue(contacts.All(c => c.Address == expectedAddress), "All contacts retrieved should have specified address");
+        }
+
+        [TestMethod]
+        public async Task ShouldGetContact()
+        {
+            Assert.Fail("Todo");
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(HttpRequestException), "Email is already registered")]
         public async Task ShouldGetUserExistsError()
         {

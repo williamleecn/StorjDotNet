@@ -10,13 +10,21 @@ namespace StorjDotNet.Models
 {
     public class RequestModel
     {
-        private string m_Nonce;
+        private long? m_Nonce;
         [JsonProperty(PropertyName = "__nonce", NullValueHandling = NullValueHandling.Ignore)]
-        public string Nonce { get { return m_Nonce; } }
+        public long? Nonce { get { return m_Nonce; } }
 
         public void SetNonce()
         {
             m_Nonce = Helpers.GetNonce();
+        }
+
+        public virtual Dictionary<string, object> GetQueryParams()
+        {
+            return new Dictionary<string, object>()
+            {
+                { "__nonce", m_Nonce }
+            };
         }
     }
 
@@ -46,4 +54,38 @@ namespace StorjDotNet.Models
         public string Key { get; set; }
     }
 
+    public class ContactListRequestModel : RequestModel
+    {
+        public int? PageNumber { get; set; }
+        public string Address { get; set; }
+        public string Protocol { get; set; }
+        public string UserAgent { get; set; }
+        public bool? Connected { get; set; }
+
+        public override Dictionary<string, object> GetQueryParams()
+        {
+            return new Dictionary<string, object>()
+            {
+                { "page", PageNumber },
+                { "address", Address },
+                { "protocol", Protocol },
+                { "userAgent", UserAgent },
+                { "connected", Connected },
+                { "__nonce", Nonce }
+            };
+        }
+    }
+
+    public class ContactRequestModel : RequestModel
+    {
+        public string NodeId { get; set; }
+
+        public override Dictionary<string, object> GetQueryParams()
+        {
+            return new Dictionary<string, object>()
+            {
+                { "nodeID", NodeId }
+            };
+        }
+    }
 }

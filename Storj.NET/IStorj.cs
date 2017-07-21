@@ -14,6 +14,9 @@ namespace StorjDotNet
         Task<string> GenerateMnemonic(int strength, string passphrase);
         Task<string> GenerateMnemonic(int strength, string passphrase, MnemonicLanguage language);
         Task<Bridge> GetBridge();
+        Task<IEnumerable<Contact>> GetContacts();
+        Task<IEnumerable<Contact>> GetContacts(ContactListRequestModel model);
+        Task<Contact> GetContact(ContactRequestModel model);
         Task<BridgeUser> BridgeRegister(string email, string password);
         Task<IEnumerable<Bucket>> GetBuckets();
         Task<Bucket> CreateBucket(CreateBucketRequestModel model);
