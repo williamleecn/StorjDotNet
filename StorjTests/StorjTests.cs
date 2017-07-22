@@ -130,7 +130,15 @@ namespace StorjTests
         [TestMethod]
         public async Task ShouldGetContact()
         {
-            Assert.Fail("Todo");
+            var contactModel = new ContactRequestModel()
+            {
+                NodeId = "b7d0cdcca39ea63c1d226d164ee8086ecc99c2db"
+            };
+            
+            Contact contact = await m_LibStorjBasicAuth.GetContact(contactModel);
+            Assert.IsNotNull(contact);
+            Assert.AreEqual("b7d0cdcca39ea63c1d226d164ee8086ecc99c2db", contact.NodeId);
+            Assert.IsTrue(contact.LastSeenDateTime > new DateTime(2017, 7, 21), "Contact should be seen after July 21, 2017");
         }
 
         [TestMethod]
