@@ -14,6 +14,7 @@ namespace StorjTests
     public class StorjTests
     {
         private const string defaultMnemonic = "amount culture oblige crystal elephant leisure run library host hurdle taxi cool odor sword parade picnic fence pass remove sudden cloud concert recipe weather";
+        private const string defaultPass = "f7a7cf08e76001545c9767265503802dd972a7dd3bfb430b54b664dda5ba6529";
         private const string defaultUser = "ssa3512+StorjDotNetCI@gmail.com";
         private const string defaultBridgeUrl = "api.storj.io";
         private static string m_EcdsaKey;
@@ -27,7 +28,7 @@ namespace StorjTests
             m_bridgeUser = context.Properties.Contains("bridgeUser") ?
                 context.Properties["bridgeUser"].ToString() : defaultUser;
             string bridgePassword = context.Properties.Contains("bridgePass") ?
-                context.Properties["bridgePass"].ToString() : null;
+                context.Properties["bridgePass"].ToString() : defaultPass;
             string bridgeHost = context.Properties.Contains("bridgeUrl") ?
                 context.Properties["bridgeUrl"].ToString() : defaultBridgeUrl;
             string mnemonic = context.Properties.Contains("testMnemonic24") ?
