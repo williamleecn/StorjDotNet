@@ -13,7 +13,8 @@ namespace StorjTests
     [TestClass]
     public class StorjTests
     {
-        private const string defaultMnemonic = "amount culture oblige crystal elephant leisure run library host hurdle taxi cool odor sword parade picnic fence pass remove sudden cloud concert recipe weather";
+        private const string mnemonic24 = "amount culture oblige crystal elephant leisure run library host hurdle taxi cool odor sword parade picnic fence pass remove sudden cloud concert recipe weather";
+        private const string mnemonic12 = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         private const string defaultPass = "f7a7cf08e76001545c9767265503802dd972a7dd3bfb430b54b664dda5ba6529";
         private const string defaultUser = "ssa3512+StorjDotNetCI@gmail.com";
         private const string defaultBridgeUrl = "api.storj.io";
@@ -31,8 +32,8 @@ namespace StorjTests
                 context.Properties["bridgePass"].ToString() : defaultPass;
             string bridgeHost = context.Properties.Contains("bridgeUrl") ?
                 context.Properties["bridgeUrl"].ToString() : defaultBridgeUrl;
-            string mnemonic = context.Properties.Contains("testMnemonic24") ?
-                context.Properties["testMnemonic24"].ToString() : defaultMnemonic;
+            string mnemonic = context.Properties.Contains("testMnemonic12") ?
+                context.Properties["testMnemonic12"].ToString() : mnemonic12;
 
             var basicAuthBridgeOptions = new BridgeOptions()
             {
@@ -56,7 +57,7 @@ namespace StorjTests
 
             var encryptionOptions = new EncryptionOptions(mnemonic);
             
-            m_LibStorjBasicAuth = new Storj(basicAuthBridgeOptions, null);
+            m_LibStorjBasicAuth = new Storj(basicAuthBridgeOptions, encryptionOptions);
             m_LibStorjEcdsaAuth = new Storj(ecdsaAuthBridgeOptions, encryptionOptions);
         }
 
@@ -184,6 +185,7 @@ namespace StorjTests
         {
             var buckets = await m_LibStorjBasicAuth.GetBuckets();
             Assert.IsNotNull(buckets);
+            Assert.IsTrue(buckets.Any());
         }
 
         [TestMethod]

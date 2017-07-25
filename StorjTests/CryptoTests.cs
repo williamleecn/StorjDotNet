@@ -74,16 +74,16 @@ namespace StorjTests
         public void GeneratesBucketKey()
         {
             string mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-            string bucket_id = "0123456789ab0123456789ab";
-            string expected_bucket_key = "b2464469e364834ad21e24c64f637c39083af5067693605c84e259447644f6f6";
+            string bucketId = "0123456789ab0123456789ab";
+            string expectedBucketKey = "b2464469e364834ad21e24c64f637c39083af5067693605c84e259447644f6f6";
 
-            string bucket_key = new Crypto(mnemonic).GenerateBucketKey(bucket_id);
+            string bucketKey = new Crypto(mnemonic).GenerateBucketKey(bucketId);
 
-            Assert.AreEqual(expected_bucket_key, bucket_key);     
+            Assert.AreEqual(expectedBucketKey, bucketKey);     
         }
 
         [TestMethod]
-        public void EncryptsMeta()
+        public void EncryptsDecryptsMeta()
         {
             byte[] key = new byte[32] {215,99,0,133,172,219,64,35,54,53,171,23,146,160,
                 81,126,137,21,253,171,48,217,184,188,8,137,3,4,83,50,30,251};
@@ -92,7 +92,22 @@ namespace StorjTests
 
             string meta = "encrypt this text";
             Crypto crypto = new Crypto(mnemonic12);
-            crypto.EncryptMeta(meta, key, iv);
+            string encrypted = crypto.EncryptMeta(meta, key, iv);
+            Assert.IsFalse(string.IsNullOrEmpty(encrypted));
+            string decrypted = crypto.DecryptMeta(encrypted, key);
+            Assert.AreEqual(meta, decrypted);
+        }
+        
+        [TestMethod]
+        public void DecryptsBucketLongerName()
+        {
+            Bucket bucket = new Bucket()
+            {
+                Name = "KC4zcZRJtwrMyCZ2d2+tLQI7VScKPDCRI6yiGnp30pM3Uhz3GPdHwxOLvCvXGONbeOBmF+wL3EI7V4SD4ec3dQ0or9PuZlghlQ=="
+            };
+
+            new Crypto(m_Bip39_12Words).TryDecryptBucket(bucket);
+            Assert.AreEqual("EncryptedBucketLongerName", bucket.Name);
         }
 
         [TestMethod]
@@ -100,19 +115,10 @@ namespace StorjTests
         {
             Bucket bucket = new Bucket()
             {
-                User = "ssa3512+StorjDotNetCI@gmail.com",
-                EncryptionKey = string.Empty,
-                PublicPermissions = new string[0],
-                Created = "2017-07-19T14:39:27.116Z",
-                Name = "VlEEPnbgeOshaNr2/9XDA52nrBe4DDiDKfAFbBqxMMPF1QgwTxyBrjZp6VWplK14TttWafLwXw8HEs869FqY",
-                Pubkeys = new string[0],
-                Status = "Active",
-                Transfer = 0,
-                Storage = 0,
-                Id = "a97a342dcb351184303a26bb"
+                Name = "MBfnRAFCQFDwfitJixvOViAYCfg3ZsByiqvymUwOTykwdMH8r3zAjgdk84UEcSx+X+oQAE4F4CYGGu4skGan"
             };
 
-            new Crypto(m_Bip39_24Words).TryDecryptBucket(bucket);
+            new Crypto(m_Bip39_12Words).TryDecryptBucket(bucket);
             Assert.AreEqual("EncryptedBucket", bucket.Name);
         }
 
@@ -123,8 +129,11 @@ namespace StorjTests
             {
                 Name = "EncryptedBucket"
             };
-            new Crypto(m_Bip39_24Words).EncryptBucketName(bucket);
-            Assert.AreEqual("VlEEPnbgeOshaNr2/9XDA52nrBe4DDiDKfAFbBqxMMPF1QgwTxyBrjZp6VWplK14TttWafLwXw8HEs869FqY", bucket.Name);
+            new Crypto(m_Bip39_12Words).EncryptBucketName(bucket);
+
+            Assert.IsFalse(string.IsNullOrEmpty(bucket.Name));
+            Assert.AreNotEqual("EncryptedBucket", bucket.Name);
+            Console.WriteLine("Bucket name is {0}",bucket.Name);
         }
 
         [TestMethod]
