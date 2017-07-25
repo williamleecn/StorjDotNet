@@ -18,7 +18,9 @@ namespace StorjDotNet
         Task<IEnumerable<Contact>> GetContacts(ContactListRequestModel model);
         Task<Contact> GetContact(ContactRequestModel model);
         Task<BridgeUser> BridgeRegister(string email, string password);
+        Task<Bucket> GetBucket(Bucket model);
         Task<IEnumerable<Bucket>> GetBuckets();
+        Task<IEnumerable<StorjFile>> GetBucketContents(Bucket model);
         Task<Bucket> CreateBucket(CreateBucketRequestModel model);
         Task<AuthKeyModel> RegisterAuthKey(AuthKeyRequestModel model);
     }

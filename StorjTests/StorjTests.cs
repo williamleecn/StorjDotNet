@@ -189,6 +189,20 @@ namespace StorjTests
         }
 
         [TestMethod]
+        public async Task ShouldGetBucketContents()
+        {
+            Bucket bucket = new Bucket()
+            {
+                Id = "4895e46d45d99f429bde4e3a"
+            };
+            var newBucket = await m_LibStorjBasicAuth.GetBucket(bucket);
+            Assert.IsNotNull(newBucket);
+            Assert.AreEqual(bucket.Id, newBucket.Id);
+            Assert.AreEqual("EncryptedBucket", newBucket.Name);
+
+        }
+
+        [TestMethod]
         public async Task ShouldCreateBucket()
         {
             Bucket createdBucket = await m_LibStorjBasicAuth.CreateBucket(null);

@@ -77,6 +77,23 @@ namespace StorjDotNet
             
         }
 
+        internal void TryDecryptFileMetas(IEnumerable<StorjFile> files)
+        {
+            foreach (var file in files)
+            {
+                TryDecryptFileMeta(file);
+            }
+        }
+
+        public void TryDecryptFileMeta(StorjFile file)
+        {
+            string bucketKey = GenerateBucketKey(file.Bucket);
+            byte[] hmac = GetHMAC_SHA512(bucketKey.HexStringToBytes(), _bucketMetaMagic);
+            byte[] key = hmac.Take(Sha256DigestSize).ToArray();
+            string decryptedFileName = DecryptMeta(file.FileName, key);
+            file.FileName = decryptedFileName ?? file.FileName;
+        }
+
         public byte[] GetHMAC_SHA512(byte[] key, byte[] update)
         {
             HMac hmac = new HMac(new Sha512Digest());
@@ -170,6 +187,12 @@ namespace StorjDotNet
         public string GenerateBucketKey(string bucketId)
         {
             return GetDeterministicKey(_seed, 128, bucketId);
+        }
+
+        public string GenerateFileKey(string bucketId, string index)
+        {
+            string bucketKey = GenerateBucketKey(bucketId);
+            return GetDeterministicKey(bucketKey.HexStringToBytes(), 64, index);
         }
 
         private string GetDeterministicKey(byte[] seed, int keyLength, string id)

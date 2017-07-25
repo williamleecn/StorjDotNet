@@ -6,18 +6,16 @@ using System.Threading.Tasks;
 
 namespace StorjDotNet.Models
 {
-    public class Bucket
+    public class StorjFile
     {
-        public string User { get; set; }
-        public string EncryptionKey { get; set; }
-        public IEnumerable<string> PublicPermissions { get; set; }
-        public string Created { get; set; }
-        public string Name { get; set; }
-        public IEnumerable<string> Pubkeys { get; set; }
-        public string Status { get; set; }
-        public int Transfer { get; set; }
-        public int Storage { get; set; }
+        public string Bucket { get; set; }
+        public string MimeType { get; set; }
+        public string FileName { get; set; }
+        public string Frame { get; set; }
+        public long Size { get; set; }
         public string Id { get; set; }
+        public string Created { get; set; }
+        public FileHmac Hmac { get; set; }
 
         public DateTime? CreatedDateTime
         {
@@ -31,5 +29,11 @@ namespace StorjDotNet.Models
                 return null;
             }
         }
+    }
+
+    public class FileHmac
+    {
+        public string Value { get; set; }
+        public string Type { get; set; }
     }
 }

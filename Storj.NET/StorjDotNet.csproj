@@ -65,6 +65,7 @@
     <Compile Include="Models\BridgeModels.cs" />
     <Compile Include="Models\BucketModels.cs" />
     <Compile Include="Models\ContactModels.cs" />
+    <Compile Include="Models\FileModels.cs" />
     <Compile Include="Models\RequestModels.cs" />
     <Compile Include="Storj.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

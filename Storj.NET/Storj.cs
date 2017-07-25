@@ -122,6 +122,26 @@ namespace StorjDotNet
             return await JsonPost<Bucket>("buckets", model);
         }
 
+        public async Task<Bucket> GetBucket(Bucket bucket)
+        {
+            Bucket fetchedBucket = await JsonGet<Bucket>($"buckets/{bucket.Id}");
+            if (UseEncryption)
+            {
+                crypto.TryDecryptBucket(fetchedBucket);
+            }
+            return fetchedBucket;
+        }
+
+        public async Task<IEnumerable<StorjFile>> GetBucketContents(Bucket bucket)
+        {
+            IEnumerable<StorjFile> files = await JsonGet<IEnumerable<StorjFile>>($"buckets/{bucket.Id}/files");
+            if (UseEncryption)
+            {
+                crypto.TryDecryptFileMetas(files);
+            }
+            return files;
+        }
+
         #endregion
         
         #region [ Private Helpers ]

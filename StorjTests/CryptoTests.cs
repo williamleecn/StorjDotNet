@@ -83,6 +83,19 @@ namespace StorjTests
         }
 
         [TestMethod]
+        public void GeneratesFileKey()
+        {
+            string mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+            string bucketId = "0123456789ab0123456789ab";
+            string filename = "samplefile.txt";
+            string index = "150589c9593bbebc0e795d8c4fa97304b42c110d9f0095abfac644763beca66e";
+            string expectedFileKey = "bb3552fc2e16d24a147af4b2d163e3164e6dbd04bbc45fc1c3eab69f384337e9";
+
+            string actualFileKey = new Crypto(mnemonic).GenerateFileKey(bucketId, index);
+            Assert.AreEqual(expectedFileKey, expectedFileKey);
+        }
+
+        [TestMethod]
         public void EncryptsDecryptsMeta()
         {
             byte[] key = new byte[32] {215,99,0,133,172,219,64,35,54,53,171,23,146,160,
