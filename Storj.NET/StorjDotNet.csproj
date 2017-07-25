@@ -59,6 +59,7 @@
     <Compile Include="Crypto.cs" />
     <Compile Include="EncryptionOptions.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="FileHandler.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="IStorj.cs" />
     <Compile Include="Models\AuthenticationModels.cs" />

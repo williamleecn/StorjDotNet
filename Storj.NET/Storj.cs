@@ -15,13 +15,13 @@ namespace StorjDotNet
 {
     public class Storj : IStorj
     {
-        private BridgeOptions m_BridgeOptions;
-        private static readonly HttpClient client = new HttpClient();
-        private readonly Crypto crypto;
+        private BridgeOptions _bridgeOptions;
+        private static readonly HttpClient _client = new HttpClient();
+        private readonly Crypto _crypto;
 
-        private bool UseEncryption => crypto != null;
+        private bool UseEncryption => _crypto != null;
 
-        public Storj(BridgeOptions bridgeOptions, EncryptionOptions encryptionOptions)
+        public Storj(BridgeOptions bridgeOptions, EncryptionOptions encryptionOptions = null)
         {
             if (bridgeOptions == null)
             {
@@ -31,13 +31,13 @@ namespace StorjDotNet
             {
                 throw new ArgumentNullException(nameof(encryptionOptions), "Encryption options can not be null when using ECDSA authentication");
             }
-            m_BridgeOptions = bridgeOptions;
-            crypto = encryptionOptions?.GetCrypto();
+            _bridgeOptions = bridgeOptions;
+            _crypto = encryptionOptions?.GetCrypto();
         }
 
         public void SetBridgeOptions(BridgeOptions bridgeOptions)
         {
-            m_BridgeOptions = bridgeOptions;
+            _bridgeOptions = bridgeOptions;
         }
 
         #region [ Mnemonic Functions ]
@@ -111,7 +111,7 @@ namespace StorjDotNet
             IEnumerable<Bucket> buckets = await JsonGet<IEnumerable<Bucket>>("buckets");
             if (UseEncryption)
             {
-                crypto.TryDecryptBuckets(buckets);
+                _crypto.TryDecryptBuckets(buckets);
             }
             return buckets;
 
@@ -119,6 +119,10 @@ namespace StorjDotNet
 
         public async Task<Bucket> CreateBucket(CreateBucketRequestModel model)
         {
+            if (model != null && UseEncryption)
+            {
+                _crypto.EncryptBucketName(model);
+            }
             return await JsonPost<Bucket>("buckets", model);
         }
 
@@ -127,7 +131,7 @@ namespace StorjDotNet
             Bucket fetchedBucket = await JsonGet<Bucket>($"buckets/{bucket.Id}");
             if (UseEncryption)
             {
-                crypto.TryDecryptBucket(fetchedBucket);
+                _crypto.TryDecryptBucket(fetchedBucket);
             }
             return fetchedBucket;
         }
@@ -137,28 +141,43 @@ namespace StorjDotNet
             IEnumerable<StorjFile> files = await JsonGet<IEnumerable<StorjFile>>($"buckets/{bucket.Id}/files");
             if (UseEncryption)
             {
-                crypto.TryDecryptFileMetas(files);
+                _crypto.TryDecryptFileNames(files);
             }
             return files;
         }
 
+        public async Task<StorjFile> GetFileInfo(StorjFile file)
+        {
+            StorjFile retrievedFile = await JsonGet<StorjFile>($"buckets/{file.Bucket}/files/{file.Id}/info");
+            if (UseEncryption)
+            {
+                _crypto.TryDecryptFileName(retrievedFile);
+            }
+            return retrievedFile;
+        }
+
+        public async Task<Stream> DownloadFile(FileRequestModel model)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
-        
+
         #region [ Private Helpers ]
 
         private async Task<TResult> JsonGet<TResult>(string path, RequestModel model = null)
         {
-            return await JsonRequest<TResult>(path, HttpMethod.Get, model, m_BridgeOptions.DefaultAuthenticationMethod);
+            return await JsonRequest<TResult>(path, HttpMethod.Get, model, _bridgeOptions.DefaultAuthenticationMethod);
         }
 
         private async Task<TResult> JsonPost<TResult>(string path, RequestModel model)
         {
-            return await JsonRequest<TResult>(path, HttpMethod.Post, model, m_BridgeOptions.DefaultAuthenticationMethod);
+            return await JsonRequest<TResult>(path, HttpMethod.Post, model, _bridgeOptions.DefaultAuthenticationMethod);
         }
 
         private async Task<TResult> JsonRequest<TResult>(string path, HttpMethod method, RequestModel model, AuthenticationMethod authenticationMethod)
         {
-            Uri requestUri = new Uri(m_BridgeOptions.BridgeUri, path);
+            Uri requestUri = new Uri(_bridgeOptions.BridgeUri, path);
             HttpRequestMessage request = new HttpRequestMessage();
             request.Method = method;
 
@@ -177,7 +196,7 @@ namespace StorjDotNet
             // Basic
             if (authenticationMethod == AuthenticationMethod.Basic)
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", m_BridgeOptions.AuthorizationHeader);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", _bridgeOptions.AuthorizationHeader);
             }
             // ECSDA signature
             else if (authenticationMethod == AuthenticationMethod.ECDSA)
@@ -199,8 +218,8 @@ namespace StorjDotNet
                     string query = ConstructQueryString(model.GetQueryParams());
                     messageToSign = GetMessageToSign(path, method, query);
                 }
-                request.Headers.Add("x-signature", crypto.SignMessage(messageToSign));
-                request.Headers.Add("x-pubkey", crypto.Pubkey);
+                request.Headers.Add("x-signature", _crypto.SignMessage(messageToSign));
+                request.Headers.Add("x-pubkey", _crypto.Pubkey);
             }
 
             if (!method.IsDataRequest())
@@ -213,7 +232,7 @@ namespace StorjDotNet
             string responseContent = null;
             try
             {
-                HttpResponseMessage response = await client.SendAsync(request);
+                HttpResponseMessage response = await _client.SendAsync(request);
                 responseContent = await response.Content.ReadAsStringAsync();
                 response.EnsureSuccessStatusCode();
 

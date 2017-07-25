@@ -19,6 +19,7 @@ namespace StorjTests
         private const string defaultUser = "ssa3512+StorjDotNetCI@gmail.com";
         private const string defaultBridgeUrl = "api.storj.io";
         private static string m_EcdsaKey;
+        private static IStorj m_LibStorjBasicAuthNoCrypto;
         private static IStorj m_LibStorjBasicAuth;
         private static IStorj m_LibStorjEcdsaAuth;
         private static string m_bridgeUser;
@@ -57,6 +58,7 @@ namespace StorjTests
 
             var encryptionOptions = new EncryptionOptions(mnemonic);
             
+            m_LibStorjBasicAuthNoCrypto = new Storj(basicAuthBridgeOptions);
             m_LibStorjBasicAuth = new Storj(basicAuthBridgeOptions, encryptionOptions);
             m_LibStorjEcdsaAuth = new Storj(ecdsaAuthBridgeOptions, encryptionOptions);
         }
@@ -189,7 +191,7 @@ namespace StorjTests
         }
 
         [TestMethod]
-        public async Task ShouldGetBucketContents()
+        public async Task ShouldGetBucket()
         {
             Bucket bucket = new Bucket()
             {
@@ -203,6 +205,19 @@ namespace StorjTests
         }
 
         [TestMethod]
+        public async Task ShouldGetBucketContents()
+        {
+            Bucket bucket = new Bucket()
+            {
+                Id = "4895e46d45d99f429bde4e3a"
+            };
+            var files = await m_LibStorjBasicAuth.GetBucketContents(bucket);
+            Assert.IsNotNull(files);
+            Assert.IsTrue(files.Any());
+            Assert.IsTrue(files.Any(f => f.FileName == "TextDocument.txt"));
+        }
+
+        [TestMethod]
         public async Task ShouldCreateBucket()
         {
             Bucket createdBucket = await m_LibStorjBasicAuth.CreateBucket(null);
@@ -212,7 +227,7 @@ namespace StorjTests
 
         [TestMethod]
         [ExpectedException(typeof(HttpRequestException), "Name already used by another bucket")]
-        public async Task ShouldFailBucketExists()
+        public async Task ShouldFailBucketExistsNoCrypto()
         {
             CreateBucketRequestModel request = new CreateBucketRequestModel()
             {
@@ -220,7 +235,7 @@ namespace StorjTests
             };
             try
             {
-                Bucket createdBucket = await m_LibStorjBasicAuth.CreateBucket(request);
+                Bucket createdBucket = await m_LibStorjBasicAuthNoCrypto.CreateBucket(request);
                 Assert.Fail("CreateBucket should error");
             }
             catch(HttpRequestException ex)
@@ -228,8 +243,26 @@ namespace StorjTests
                 Assert.AreEqual(ex.Message, "Name already used by another bucket");
                 throw;
             }
-            
-            
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(HttpRequestException), "Name already used by another bucket")]
+        public async Task ShouldFailBucketExists()
+        {
+            CreateBucketRequestModel request = new CreateBucketRequestModel()
+            {
+                Name = "EncryptedBucket"
+            };
+            try
+            {
+                Bucket createdBucket = await m_LibStorjBasicAuth.CreateBucket(request);
+                Assert.Fail("CreateBucket should error");
+            }
+            catch (HttpRequestException ex)
+            {
+                Assert.AreEqual(ex.Message, "Name already used by another bucket");
+                throw;
+            }
         }
     }
 }

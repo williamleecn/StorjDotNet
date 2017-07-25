@@ -19,5 +19,13 @@ namespace StorjTests
 
             Assert.AreEqual(convertedDateTime, new DateTime(1990, 5, 23, 3, 23, 35));
         }
+
+        [TestMethod]
+        public void GetsNonce()
+        {
+            long nonce = Helpers.GetNonce();
+            long currentTicks = DateTime.Now.Ticks;
+            Assert.AreEqual(currentTicks, nonce, 100);
+        }
     }
 }

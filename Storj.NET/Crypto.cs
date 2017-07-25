@@ -47,16 +47,9 @@ namespace StorjDotNet
             return _keyPair.Sign(message.ToByteArray()).ToHexString();
         }
 
-        public void EncryptBucketName(Bucket bucket)
+        public void EncryptBucketName(CreateBucketRequestModel bucket)
         {
-            string bucketKey = GenerateBucketKey(BucketNameMagic);
-            
-            byte[] hmac = GetHMAC_SHA512(bucketKey.HexStringToBytes(), _bucketMetaMagic);
-            byte[] key = hmac.Take(Sha256DigestSize).ToArray();
-
-            byte[] bucketNameIv = GetHMAC_SHA512(bucketKey.ToByteArray(), bucket.Name.ToByteArray()).Take(Sha256DigestSize).ToArray();
-
-            bucket.Name = AESGCM.SimpleEncrypt(bucket.Name, key, bucketNameIv);
+            bucket.Name = EncryptMeta(bucket.Name, BucketNameMagic);
         }
 
         public void TryDecryptBuckets(IEnumerable<Bucket> buckets)
@@ -69,48 +62,42 @@ namespace StorjDotNet
 
         public void TryDecryptBucket(Bucket bucket)
         {
-            string bucketKey = GenerateBucketKey(BucketNameMagic);
-            byte[] hmac = GetHMAC_SHA512(bucketKey.HexStringToBytes(), _bucketMetaMagic);
-            byte[] key = hmac.Take(Sha256DigestSize).ToArray();
-            string decryptedBucketName = DecryptMeta(bucket.Name, key);
+            string decryptedBucketName = DecryptMeta(bucket.Name, BucketNameMagic);
             bucket.Name = decryptedBucketName ?? bucket.Name;
             
         }
 
-        internal void TryDecryptFileMetas(IEnumerable<StorjFile> files)
+        internal void TryDecryptFileNames(IEnumerable<StorjFile> files)
         {
             foreach (var file in files)
             {
-                TryDecryptFileMeta(file);
+                TryDecryptFileName(file);
             }
         }
 
-        public void TryDecryptFileMeta(StorjFile file)
+        public void TryDecryptFileName(StorjFile file)
         {
-            string bucketKey = GenerateBucketKey(file.Bucket);
-            byte[] hmac = GetHMAC_SHA512(bucketKey.HexStringToBytes(), _bucketMetaMagic);
-            byte[] key = hmac.Take(Sha256DigestSize).ToArray();
-            string decryptedFileName = DecryptMeta(file.FileName, key);
-            file.FileName = decryptedFileName ?? file.FileName;
+            if (string.IsNullOrEmpty(file?.Bucket))
+            {
+                throw new ArgumentException("File is invalid, must contain bucket reference", nameof(file));
+            }
+            string decryptedBucketName = DecryptMeta(file.FileName, file.Bucket);
+            file.FileName = decryptedBucketName ?? file.FileName;
         }
 
-        public byte[] GetHMAC_SHA512(byte[] key, byte[] update)
+        public string EncryptMeta(string meta, string bucketId)
         {
-            HMac hmac = new HMac(new Sha512Digest());
-            hmac.Init(new KeyParameter(key));
-            hmac.BlockUpdate(update, 0, update.Length);
-            byte[] digest = new byte[hmac.GetMacSize()];
-            hmac.DoFinal(digest, 0);
-            return digest;
-        }
-
-        public string EncryptMeta(string meta, byte[] key, byte[] iv)
-        {
+            string bucketKey = GenerateBucketKey(bucketId);
+            byte[] key = GetHmacSha512Key(bucketKey.HexStringToBytes(), _bucketMetaMagic);
+            byte[] iv = GetHmacSha512Key(bucketKey.HexStringToBytes(), meta.ToByteArray()).Take(Sha256DigestSize).ToArray();
             return AESGCM.SimpleEncrypt(meta, key, iv);
         }
 
-        public string DecryptMeta(string encryptedMeta, byte[] key)
+        public string DecryptMeta(string encryptedMeta, string bucketId)
         {
+            string bucketKey = GenerateBucketKey(bucketId);
+            byte[] hmac = GetHmacSha512Key(bucketKey.HexStringToBytes(), _bucketMetaMagic);
+            byte[] key = hmac.Take(Sha256DigestSize).ToArray();
             return AESGCM.SimpleDecrypt(encryptedMeta, key);
         }
 
@@ -202,6 +189,16 @@ namespace StorjDotNet
             SHA512 sha = SHA512.Create();
             byte[] shaHash = sha.ComputeHash(sha512Input);
             return new string(shaHash.ToHexString().Take(64).ToArray());
+        }
+
+        private byte[] GetHmacSha512Key(byte[] key, byte[] update)
+        {
+            HMac hmac = new HMac(new Sha512Digest());
+            hmac.Init(new KeyParameter(key));
+            hmac.BlockUpdate(update, 0, update.Length);
+            byte[] digest = new byte[hmac.GetMacSize()];
+            hmac.DoFinal(digest, 0);
+            return digest.Take(Sha256DigestSize).ToArray();
         }
     }
 }

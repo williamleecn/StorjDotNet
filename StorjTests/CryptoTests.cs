@@ -53,6 +53,13 @@ namespace StorjTests
         }
 
         [TestMethod]
+        public void HasPublicKey()
+        {
+            var crypto = new Crypto(m_Bip39_12Words);
+            Assert.AreEqual("03889008040060652abb1e3a7900669ed8669f9b88d8110d8fa2935d19e55f541f", crypto.Pubkey);
+        }
+
+        [TestMethod]
         public void SignsMessage()
         {
             EcKeyPair keyPair = new EcKeyPair(m_Bip39_24Words.SeedBytes);
@@ -92,23 +99,7 @@ namespace StorjTests
             string expectedFileKey = "bb3552fc2e16d24a147af4b2d163e3164e6dbd04bbc45fc1c3eab69f384337e9";
 
             string actualFileKey = new Crypto(mnemonic).GenerateFileKey(bucketId, index);
-            Assert.AreEqual(expectedFileKey, expectedFileKey);
-        }
-
-        [TestMethod]
-        public void EncryptsDecryptsMeta()
-        {
-            byte[] key = new byte[32] {215,99,0,133,172,219,64,35,54,53,171,23,146,160,
-                81,126,137,21,253,171,48,217,184,188,8,137,3,4,83,50,30,251};
-            byte[] iv = new byte[32] {70,219,247,135,162,7,93,193,44,123,188,234,203,115,129,
-                      82,70,219,247,135,162,7,93,193,44,123,188,234,203,115,129,82};
-
-            string meta = "encrypt this text";
-            Crypto crypto = new Crypto(mnemonic12);
-            string encrypted = crypto.EncryptMeta(meta, key, iv);
-            Assert.IsFalse(string.IsNullOrEmpty(encrypted));
-            string decrypted = crypto.DecryptMeta(encrypted, key);
-            Assert.AreEqual(meta, decrypted);
+            Assert.AreEqual(expectedFileKey, actualFileKey);
         }
         
         [TestMethod]
@@ -138,28 +129,35 @@ namespace StorjTests
         [TestMethod]
         public void EncryptsBucketName()
         {
-            Bucket bucket = new Bucket()
+            CreateBucketRequestModel bucket = new CreateBucketRequestModel
             {
                 Name = "EncryptedBucket"
             };
             new Crypto(m_Bip39_12Words).EncryptBucketName(bucket);
 
             Assert.IsFalse(string.IsNullOrEmpty(bucket.Name));
-            Assert.AreNotEqual("EncryptedBucket", bucket.Name);
+            Assert.AreEqual("MBfnRAFCQFDwfitJixvOViAYCfg3ZsByiqvymUwOTykwdMH8r3zAjgdk84UEcSx+X+oQAE4F4CYGGu4skGan", bucket.Name);
             Console.WriteLine("Bucket name is {0}",bucket.Name);
         }
 
         [TestMethod]
-        public void HMACTest()
+        public void DecryptsFileName()
         {
-            // parameters from libnettle hmac tests
-            byte[] key = "Jefe".ToByteArray();
-            byte[] update = "what do ya want for nothing?".ToByteArray();
-            byte[] shouldEqual = "164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737".HexStringToBytes();
+            var file = new StorjFile()
+            {
+                FileName = "3UJD8epZCM7giXBpb8+pJujCHl0xJ/myNszhHhkYSlmdTOZQf1rWqeXShVu0cP+UjLNNhYTjtjWT8P7rxNzE1A==",
+                Bucket = "4895e46d45d99f429bde4e3a"
+            };
+            new Crypto(m_Bip39_12Words).TryDecryptFileName(file);    
+            Assert.AreEqual("TextDocument.txt", file.FileName);
 
-            byte[] digest = new Crypto(m_Bip39_24Words).GetHMAC_SHA512(key, update);
+        }
 
-            CollectionAssert.AreEqual(shouldEqual, digest);
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void DecryptFileNameFailsNoFile()
+        {
+            new Crypto(m_Bip39_12Words).TryDecryptFileName(null);
         }
     }
 }

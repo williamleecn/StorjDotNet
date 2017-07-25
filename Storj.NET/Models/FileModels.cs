@@ -36,4 +36,15 @@ namespace StorjDotNet.Models
         public string Value { get; set; }
         public string Type { get; set; }
     }
+
+    public class Shard
+    {
+        public int Index { get; set; }
+        public string Hash { get; set; }
+        public int Size { get; set; }
+        public bool Parity { get; set; }
+        public string Token { get; set; }
+        public Contact Farmer { get; set; }
+        public string Operation { get; set; }
+    }
 }

@@ -2,6 +2,7 @@
 using StorjDotNet.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,7 +22,9 @@ namespace StorjDotNet
         Task<Bucket> GetBucket(Bucket model);
         Task<IEnumerable<Bucket>> GetBuckets();
         Task<IEnumerable<StorjFile>> GetBucketContents(Bucket model);
+        Task<StorjFile> GetFileInfo(StorjFile file);
         Task<Bucket> CreateBucket(CreateBucketRequestModel model);
+        Task<Stream> DownloadFile(FileRequestModel model);
         Task<AuthKeyModel> RegisterAuthKey(AuthKeyRequestModel model);
     }
 }

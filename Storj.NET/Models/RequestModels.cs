@@ -88,4 +88,41 @@ namespace StorjDotNet.Models
             };
         }
     }
+
+    public class FileRequestModel : RequestModel
+    {
+        public string BucketId { get; set; }
+        public string FileId { get; set; }
+        public int Skip { get; set; }
+        public int Limit { get; set; }
+        public IEnumerable<Contact> Exclude { get; set; }
+
+        public override Dictionary<string, object> GetQueryParams()
+        {
+            var queryParams = base.GetQueryParams();
+            queryParams.Add("skip", Skip);
+            queryParams.Add("limit", Limit);
+            queryParams.Add("exclude", GetFarmerCsv(Exclude));
+            return queryParams;
+        }
+
+        private string GetFarmerCsv(IEnumerable<Contact> farmers)
+        {
+            StringBuilder sb = new StringBuilder();
+            bool first = true;
+            foreach (var farmer in farmers)
+            {
+                if (!string.IsNullOrEmpty(farmer?.NodeId))
+                {
+                    if (!first)
+                        sb.Append(",");
+                    else
+                        first = false;
+
+                    sb.Append(farmer.NodeId);
+                }
+            }
+            return sb.ToString();
+        }
+    }
 }
