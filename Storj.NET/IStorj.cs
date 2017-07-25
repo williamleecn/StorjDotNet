@@ -25,6 +25,7 @@ namespace StorjDotNet
         Task<StorjFile> GetFileInfo(StorjFile file);
         Task<Bucket> CreateBucket(CreateBucketRequestModel model);
         Task<Stream> DownloadFile(FileRequestModel model);
+        Task<BucketToken> GetBucketToken(TokenRequestModel model);
         Task<AuthKeyModel> RegisterAuthKey(AuthKeyRequestModel model);
     }
 }

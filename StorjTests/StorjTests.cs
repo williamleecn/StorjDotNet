@@ -226,6 +226,21 @@ namespace StorjTests
         }
 
         [TestMethod]
+        public async Task ShouldGetBucketToken()
+        {
+            string bucketId = "4895e46d45d99f429bde4e3a";
+            var requestModel = new TokenRequestModel()
+            {
+                Operation = FileOperation.Pull,
+                BucketId = bucketId
+            };
+            var token = await m_LibStorjBasicAuth.GetBucketToken(requestModel);
+            Assert.IsNotNull(token);
+            Assert.AreEqual(bucketId, token.Bucket);
+            Assert.AreEqual("PULL", token.Operation);
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(HttpRequestException), "Name already used by another bucket")]
         public async Task ShouldFailBucketExistsNoCrypto()
         {

@@ -31,8 +31,16 @@ namespace StorjDotNet
         Token
     }
 
+    public enum FileOperation
+    {
+        Pull,
+        Push
+    }
+
     public static class ApplicationConstants
     {
+        public const int MaxConcurrentStreams = 6;
+
         // File transfer success
         public const int STORJ_TRANSFER_OK = 0;
         public const int STORJ_TRANSFER_CANCELED = 1;

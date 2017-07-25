@@ -32,4 +32,26 @@ namespace StorjDotNet.Models
             }
         }
     }
+
+    public class BucketToken
+    {
+        public string Bucket { get; set; }
+        public string Operation { get; set; }
+        public string Expires { get; set; }
+        public string Token { get; set; }
+        public string Id { get; set; }
+        public string EncryptionKey { get; set; }
+        public DateTime? ExpiresDateTime
+        {
+            get
+            {
+                DateTime expiresDateTime;
+                if (DateTime.TryParse(Expires, out expiresDateTime))
+                {
+                    return expiresDateTime;
+                }
+                return null;
+            }
+        }
+    }
 }

@@ -37,7 +37,7 @@ namespace StorjDotNet.Models
         public string Type { get; set; }
     }
 
-    public class Shard
+    public class ShardPointer
     {
         public int Index { get; set; }
         public string Hash { get; set; }

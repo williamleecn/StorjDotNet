@@ -125,4 +125,29 @@ namespace StorjDotNet.Models
             return sb.ToString();
         }
     }
+
+    public class TokenRequestModel : RequestModel
+    {
+        [JsonIgnore]
+        public string BucketId { get; set; }
+
+        [JsonProperty(PropertyName = "operation")]
+        public string OperationString
+        {
+            get
+            {
+                switch (Operation)
+                {
+                    case FileOperation.Pull:
+                        return "PULL";
+                    case FileOperation.Push:
+                        return "PUSH";
+                    default:
+                        return null;
+                }
+            }
+        }
+
+        public FileOperation Operation { get; set; }
+    }
 }

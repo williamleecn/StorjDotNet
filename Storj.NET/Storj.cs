@@ -158,9 +158,20 @@ namespace StorjDotNet
 
         public async Task<Stream> DownloadFile(FileRequestModel model)
         {
-            throw new NotImplementedException();
+            Stream stream = new MemoryStream();
+            var tokenRequest = new TokenRequestModel()
+            {
+                Operation = FileOperation.Pull,
+                BucketId = model.BucketId
+            };
+            var token = await GetBucketToken(tokenRequest);
+            return stream;
         }
 
+        public async Task<BucketToken> GetBucketToken(TokenRequestModel model)
+        {
+            return await JsonPost<BucketToken>($"buckets/{model.BucketId}/tokens", model);
+        }
         #endregion
 
         #region [ Private Helpers ]
