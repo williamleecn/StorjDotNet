@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using StorjDotNet;
 using StorjDotNet.Models;
 using System.Net.Http;
+using System.IO;
+using StorjDotNet.Logging;
 
 namespace StorjTests
 {
@@ -53,14 +55,16 @@ namespace StorjTests
                 DefaultAuthenticationMethod = AuthenticationMethod.ECDSA
             };
 
+            var logger = new ConsoleLogger(LogLevel.Debug);
+
             var keyPair = new Bitcoin.BitcoinUtilities.EcKeyPair(Bitcoin.BIP39.BIP39.GetSeedBytes(mnemonic));
             m_EcdsaKey = keyPair.PublicKey.ToHexString();
 
             var encryptionOptions = new EncryptionOptions(mnemonic);
             
-            m_LibStorjBasicAuthNoCrypto = new Storj(basicAuthBridgeOptions);
-            m_LibStorjBasicAuth = new Storj(basicAuthBridgeOptions, encryptionOptions);
-            m_LibStorjEcdsaAuth = new Storj(ecdsaAuthBridgeOptions, encryptionOptions);
+            m_LibStorjBasicAuthNoCrypto = new Storj(basicAuthBridgeOptions, logger:logger);
+            m_LibStorjBasicAuth = new Storj(basicAuthBridgeOptions, encryptionOptions, logger);
+            m_LibStorjEcdsaAuth = new Storj(ecdsaAuthBridgeOptions, encryptionOptions, logger);
         }
 
         [TestMethod]
@@ -278,6 +282,26 @@ namespace StorjTests
                 Assert.AreEqual(ex.Message, "Name already used by another bucket");
                 throw;
             }
+        }
+
+        [TestMethod]
+        public async Task ShouldDownloadShards()
+        {
+            var request = new FileRequestModel()
+            {
+                BucketId = "4895e46d45d99f429bde4e3a",
+                FileId = "feacfa26fbf8d87500c33d97"
+            };
+            var directory = Directory.CreateDirectory(Path.GetTempPath() + "StorjTests");
+            await m_LibStorjBasicAuth.DownloadFile(request, directory.FullName);
+            string path = $"{Path.GetTempPath()}\\Storj\\1dcf4100c5b883f7fa118185b148909dc646ccb7ee96e36a5291ca834d295c38";
+            Assert.IsTrue(Directory.Exists(path));
+            Assert.IsTrue(File.Exists($"{path}\\0.shard"));
+            Assert.IsTrue(File.Exists($"{path}\\1.shard"));
+            Assert.IsTrue(File.Exists($"{path}\\2.shard"));
+            Assert.IsTrue(File.Exists($"{path}\\3.shard"));
+            Assert.IsTrue(File.Exists($"{path}\\4.shard"));
+            Assert.IsTrue(File.Exists($"{path}\\5.shard"));
         }
     }
 }

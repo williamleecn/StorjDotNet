@@ -44,7 +44,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Security" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -62,12 +64,18 @@
     <Compile Include="FileHandler.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="IStorj.cs" />
+    <Compile Include="Logging\ConsoleLogger.cs" />
+    <Compile Include="Logging\Logger.cs" />
     <Compile Include="Models\AuthenticationModels.cs" />
     <Compile Include="Models\BridgeModels.cs" />
     <Compile Include="Models\BucketModels.cs" />
     <Compile Include="Models\ContactModels.cs" />
     <Compile Include="Models\FileModels.cs" />
     <Compile Include="Models\RequestModels.cs" />
+    <Compile Include="ReedSolomon\GenericGF.cs" />
+    <Compile Include="ReedSolomon\GenericGFPoly.cs" />
+    <Compile Include="ReedSolomon\ReedSolomonDecoder.cs" />
+    <Compile Include="ReedSolomon\ReedSolomonEncoder.cs" />
     <Compile Include="Storj.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -84,9 +92,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ReedSolomon\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

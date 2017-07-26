@@ -37,9 +37,19 @@ namespace StorjDotNet
         Push
     }
 
+    public enum LogLevel
+    {
+        Error = 0,
+        Warn = 1,
+        Info = 2,
+        Debug = 3
+    }
+
     public static class ApplicationConstants
     {
         public const int MaxConcurrentStreams = 6;
+
+        public const int ShardFetchRetries = 5;
 
         // File transfer success
         public const int STORJ_TRANSFER_OK = 0;

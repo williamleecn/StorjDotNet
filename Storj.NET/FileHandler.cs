@@ -33,6 +33,7 @@ using System.IO.Compression;
 using System.Net.Http;
 using System.Threading.Tasks;
 using StorjDotNet;
+using StorjDotNet.Logging;
 using StorjDotNet.Models;
 
 namespace StorjDotNet
@@ -42,19 +43,20 @@ namespace StorjDotNet
         private string _path;
         private string _filename;
         private string _temp;
-        private CancellationToken _cancellationToken;
-        private readonly HttpClient _client;
+        private static CancellationToken _cancellationToken;
+        private static readonly HttpClient _client = new HttpClient();
+        private readonly Logger _logger;
 
-        public FileHandler(string path, string filename)
+        public FileHandler(string path, string filename, Logger logger)
         {
             _path = path;
             _filename = filename;
+            _logger = logger ?? new Logger();
             _cancellationToken = new CancellationToken(false);
             string temp = Path.GetTempPath();
             string fileSha = filename.GetSha256Hash();
-            _temp = $"{temp}/{fileSha}";
+            _temp = $"{temp}\\Storj\\{fileSha}";
             Directory.CreateDirectory(_temp);
-            _client = new HttpClient();
         }
 
         public async Task FetchShards(IEnumerable<ShardPointer> pointers)
@@ -64,33 +66,57 @@ namespace StorjDotNet
                 MaxDegreeOfParallelism = ApplicationConstants.MaxConcurrentStreams,
                 CancellationToken = _cancellationToken
             };
-            Parallel.ForEach(pointers, options, async p =>
+
+            List<Task> tasks = new List<Task>();
+            foreach (var p in pointers.Where(p => !p.Parity))
             {
-                using (Stream stream = await FetchShard(p))
+                tasks.Add(Task.Run(async () =>
                 {
-                    string filePath = $"{_temp}/{p.Index}.shard";
-                    using (FileStream fs = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite,
-                        FileShare.Read, p.Size))
+                    Stream stream = await FetchShard(p);
+                    if (stream != null)
                     {
-                        stream.CopyTo(fs);
+                        string filePath = $"{_temp}\\{p.Index}.shard";
+                        using (FileStream fs = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite,
+                            FileShare.Read, p.Size))
+                        {
+                            stream.CopyTo(fs);
+                            fs.Flush();
+                        }
+                        stream.Dispose();
                     }
-                }
-            });
+                    else
+                    {
+                        // TODO: Handle bad pointer
+                        // blacklist farmer, fetch new pointer and try again
+                    }
+                }));
+            }
+            await Task.WhenAll(tasks);
+            // Todo: If missing shards, fetch parity shards
         }
 
         public async Task<Stream> FetchShard(ShardPointer pointer)
         {
-            Uri requestUri = new Uri($"http://{pointer.Farmer.Address}:{pointer.Farmer.Port}/shards/{pointer.Hash}?token={pointer.Token}");
-            HttpRequestMessage request = new HttpRequestMessage();
-            request.Method = HttpMethod.Get;
-            request.RequestUri = requestUri;
-            request.Headers.Add("Content-Type", "application/octet-stream");
-            request.Headers.Add("x-token", pointer.Token);
-            var response = await _client.SendAsync(request, _cancellationToken);
-            if (response.IsSuccessStatusCode)
+            for (int i = 0; i < ApplicationConstants.ShardFetchRetries; i++)
             {
-                return await response.Content.ReadAsStreamAsync();
+                _logger.LogMessage(LogLevel.Debug, $"Fetching shard {pointer.Index}:{pointer.Hash} from " +
+                    $"{pointer.Farmer.Address}:{pointer.Farmer.Port}. Attempt {i+1}/{ApplicationConstants.ShardFetchRetries}");
+                Uri requestUri = new Uri(
+                        $"http://{pointer.Farmer.Address}:{pointer.Farmer.Port}/shards/{pointer.Hash}?token={pointer.Token}");
+                HttpRequestMessage request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Get,
+                    RequestUri = requestUri
+                };
+                request.Headers.Add("x-token", pointer.Token);
+                var response = await _client.SendAsync(request, _cancellationToken);
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogMessage(LogLevel.Debug, $"Shard {pointer.Index}:{pointer.Hash} fetched successfully");
+                    return await response.Content.ReadAsStreamAsync();
+                }
             }
+            _logger.LogMessage(LogLevel.Warn, $"Failed to fetch shard {pointer.Index}:{pointer.Hash} from {pointer.Farmer.Address}:{pointer.Farmer.Port}.");
             return null;
         }
 

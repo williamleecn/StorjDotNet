@@ -10,6 +10,7 @@ using StorjDotNet.Models;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using StorjDotNet.Logging;
 
 namespace StorjDotNet
 {
@@ -18,10 +19,11 @@ namespace StorjDotNet
         private BridgeOptions _bridgeOptions;
         private static readonly HttpClient _client = new HttpClient();
         private readonly Crypto _crypto;
+        private readonly Logger _logger;
 
         private bool UseEncryption => _crypto != null;
 
-        public Storj(BridgeOptions bridgeOptions, EncryptionOptions encryptionOptions = null)
+        public Storj(BridgeOptions bridgeOptions, EncryptionOptions encryptionOptions = null, Logger logger = null)
         {
             if (bridgeOptions == null)
             {
@@ -31,6 +33,7 @@ namespace StorjDotNet
             {
                 throw new ArgumentNullException(nameof(encryptionOptions), "Encryption options can not be null when using ECDSA authentication");
             }
+            _logger = logger ?? new Logger();
             _bridgeOptions = bridgeOptions;
             _crypto = encryptionOptions?.GetCrypto();
         }
@@ -111,6 +114,7 @@ namespace StorjDotNet
             IEnumerable<Bucket> buckets = await JsonGet<IEnumerable<Bucket>>("buckets");
             if (UseEncryption)
             {
+                _logger.LogMessage(LogLevel.Debug, "Attempting to decrypt bucket names");
                 _crypto.TryDecryptBuckets(buckets);
             }
             return buckets;
@@ -121,9 +125,12 @@ namespace StorjDotNet
         {
             if (model != null && UseEncryption)
             {
+                _logger.LogMessage(LogLevel.Debug, "Attempting to encrypt bucket name");
                 _crypto.EncryptBucketName(model);
             }
-            return await JsonPost<Bucket>("buckets", model);
+            Bucket bucket = await JsonPost<Bucket>("buckets", model);
+            _logger.LogMessage(LogLevel.Info, $"Created bucket {bucket.Id}");
+            return bucket;
         }
 
         public async Task<Bucket> GetBucket(Bucket bucket)
@@ -156,16 +163,18 @@ namespace StorjDotNet
             return retrievedFile;
         }
 
-        public async Task<Stream> DownloadFile(FileRequestModel model)
+        public async Task DownloadFile(FileRequestModel model, string path)
         {
-            Stream stream = new MemoryStream();
-            var tokenRequest = new TokenRequestModel()
+            StorjFile fileInfo = await GetFileInfo(new StorjFile()
             {
-                Operation = FileOperation.Pull,
-                BucketId = model.BucketId
-            };
-            var token = await GetBucketToken(tokenRequest);
-            return stream;
+                Bucket = model.BucketId, Id = model.FileId
+            });
+            IEnumerable<ShardPointer> shardPointers =
+                await JsonGet<IEnumerable<ShardPointer>>($"buckets/{model.BucketId}/files/{model.FileId}");
+            using (var fileHandler = new FileHandler(path, fileInfo.FileName, _logger))
+            {
+                await fileHandler.FetchShards(shardPointers);
+            }
         }
 
         public async Task<BucketToken> GetBucketToken(TokenRequestModel model)
